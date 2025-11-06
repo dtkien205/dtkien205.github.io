@@ -167,17 +167,22 @@ export default function RepoIndex({
   };
 
   if (loading && allBlogs.length === 0) return <PageLoader />;
-  if (error)
-    return <p className="text-red-600">Failed to load repo: {error}</p>;
+  if (error) return <p className="text-red-600">Failed to load repo: {error}</p>;
 
   return (
-    <section className="pb-8">
-      {/* Phần mở đầu cố định tuỳ theo repo */}
-      <IntroPage repo={repo} />
+    <section className="container mx-auto px-4 py-8 motion-safe:animate-fade-in-up motion-reduce:animate-none">
+      {/* Phần mở đầu (có thể thêm animate riêng nếu muốn) */}
+      <div className="motion-safe:animate-fade-in-up motion-reduce:animate-none">
+        <IntroPage repo={repo} />
+      </div>
 
-      {/* Danh sách bài viết */}
-      {displayedItems.map((it) => (
-        <article key={it.id} className="py-8 pb-2 border-b">
+      {/* Danh sách bài viết — stagger từng item */}
+      {displayedItems.map((it, idx) => (
+        <article
+          key={it.id}
+          className="py-8 pb-2 border-b motion-safe:animate-fade-in-up motion-reduce:animate-none"
+          style={{ animationDelay: `${idx * 60}ms` }}
+        >
           <div className="flex flex-col">
             <Link to={`${basePath}/${it.id}`} className="block">
               <h2 className="text-2xl font-bold hover:underline">{it.title}</h2>
@@ -191,7 +196,6 @@ export default function RepoIndex({
               </div>
             )}
 
-            {/* Đưa Last updated xuống đáy block */}
             {it.lastModified && (
               <div className="mt-4 text-sm text-gray-500 ml-auto text-right">
                 Last updated: {fmtDate(it.lastModified)}
@@ -207,9 +211,11 @@ export default function RepoIndex({
         </p>
       )}
 
-      {/* Nút “Tải thêm” — bật cuộn vô hạn sau lần click đầu */}
       {hasMore && !loading && (
-        <div className="flex justify-center mt-8">
+        <div
+          className="flex justify-center mt-8 motion-safe:animate-fade-in-up motion-reduce:animate-none"
+          style={{ animationDelay: `${displayedItems.length * 60}ms` }}
+        >
           <button
             onClick={handleLoadMoreClick}
             disabled={loadingMore}
