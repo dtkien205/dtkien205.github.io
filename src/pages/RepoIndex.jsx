@@ -41,6 +41,28 @@ export default function RepoIndex({
   React.useEffect(() => {
     let active = true;
     async function load() {
+      // 🚀 Thử load từ cache trước
+      const cacheKey = `repoIndex_${owner}_${repo}_${path}_v1`;
+      const CACHE_DURATION = 10 * 60 * 1000; // 10 phút
+
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_DURATION) {
+            setAllBlogs(data);
+            setDisplayedItems(data.slice(0, initialItemsToShow));
+            setHasMore(data.length > initialItemsToShow);
+            setPage(1);
+            setInfiniteEnabled(false);
+            setLoading(false);
+            return; // Dùng cache
+          }
+        }
+      } catch (e) {
+        console.warn("Cache read error:", e);
+      }
+
       try {
         setLoading(true);
         setError("");
@@ -58,55 +80,72 @@ export default function RepoIndex({
           (e) => e.type === "dir",
         );
 
-        // 2) Với mỗi thư mục: fetch README (raw) + commit gần nhất (API)
-        const results = [];
-        for (const d of dirs) {
+        // 🚀 2) Fetch tất cả blogs song song thay vì tuần tự
+        const blogPromises = dirs.map(async (d) => {
           const dirPath = path ? `${path}/${d.name}` : d.name;
 
-          // README (raw) — KHÔNG gửi header để tránh CORS
-          const readmeUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/README.md`;
-          const r = await fetch(readmeUrl);
-          if (!r.ok) continue;
-          const md = await r.text();
-          const { title, excerpt } = extractTitleAndExcerpt(md);
-
-          // lấy Last updated
-          let lastModified = "";
           try {
+            // Fetch README và commit song song
+            const readmeUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/README.md`;
             const commitsUrl = `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(
               dirPath,
             )}&page=1&per_page=1&ref=${branch}`;
-            const cRes = await fetch(commitsUrl, { headers: ghHeaders });
-            if (cRes.ok) {
-              const commits = await cRes.json();
+
+            const [readmeRes, commitsRes] = await Promise.all([
+              fetch(readmeUrl),
+              fetch(commitsUrl, { headers: ghHeaders }),
+            ]);
+
+            if (!readmeRes.ok) return null;
+
+            const md = await readmeRes.text();
+            const { title, excerpt } = extractTitleAndExcerpt(md);
+
+            let lastModified = "";
+            if (commitsRes.ok) {
+              const commits = await commitsRes.json();
               if (Array.isArray(commits) && commits.length > 0) {
                 lastModified = commits[0]?.commit?.author?.date || "";
               }
-            } else {
-              console.warn(
-                `Failed to fetch commits for ${dirPath}: HTTP ${cRes.status}`,
-              );
             }
-          } catch (e) {
-            console.warn(`Could not fetch commit info for ${dirPath}:`, e);
-          }
 
-          results.push({
-            id: d.name,
-            title: toTitleCase(title),
-            excerpt,
-            rawUrl: readmeUrl,
-            githubUrl: d.html_url,
-            lastModified, // dùng để hiển thị Last updated
-          });
-        }
+            return {
+              id: d.name,
+              title: toTitleCase(title),
+              excerpt,
+              rawUrl: readmeUrl,
+              githubUrl: d.html_url,
+              lastModified,
+            };
+          } catch (e) {
+            console.warn(`Could not fetch ${d.name}:`, e);
+            return null;
+          }
+        });
+
+        const results = (await Promise.all(blogPromises)).filter(
+          (r) => r !== null,
+        );
 
         if (active) {
           setAllBlogs(results);
           setDisplayedItems(results.slice(0, initialItemsToShow));
           setHasMore(results.length > initialItemsToShow);
           setPage(1);
-          setInfiniteEnabled(false); // reset: chưa bật cuộn vô hạn
+          setInfiniteEnabled(false);
+
+          // 💾 Lưu vào cache
+          try {
+            localStorage.setItem(
+              cacheKey,
+              JSON.stringify({
+                data: results,
+                timestamp: Date.now(),
+              })
+            );
+          } catch (e) {
+            console.warn("Cache write error:", e);
+          }
         }
       } catch (e) {
         if (active) setError(e.message);
