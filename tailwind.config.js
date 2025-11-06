@@ -16,9 +16,14 @@ export default {
           "0%": { opacity: "0", transform: "translateY(12px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "bounce-slow": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
       },
       animation: {
         "fade-in-up": "fade-in-up 420ms ease-out both",
+        "bounce-slow": "bounce-slow 2s ease-in-out infinite",
       },
     },
   },

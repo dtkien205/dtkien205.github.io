@@ -1,39 +1,112 @@
 import { useCallback, useState, useEffect } from "react";
 import { toTitleCase } from "../helpers/toTitleCase";
 import { extractTitleAndExcerpt } from "../helpers/extractTitleAndExcerpt";
+import { getRepoDisplayName } from "../helpers/getRepoDisplayName";
+import { getCachedData, setCachedData } from "../helpers/cacheUtils";
+import {
+  getGitHubHeaders,
+  fetchDirectories,
+  fetchReadmeContent,
+  fetchLastCommitDate,
+} from "../helpers/githubApi";
 import markdownRoutes from "../config/markdownRoutes";
 
+// ================================
+// CONSTANTS
+// ================================
+const CACHE_KEY = "allBlogs_cache_v1";
+const CACHE_DURATION = 60 * 60 * 1000; // 1 giờ (tăng từ 10 phút)
+
+/**
+ * Custom hook để fetch tất cả blogs từ nhiều GitHub repos
+ * Features:
+ * - LocalStorage cache (10 phút)
+ * - Parallel fetching (tối ưu tốc độ)
+ * - Error handling
+ */
 export function useFetchAllBlogs() {
+  // ================================
+  // STATE
+  // ================================
   const [allBlogs, setAllBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const fetchBlogs = useCallback(async () => {
-    // 🚀 Thử load từ cache trước
-    const CACHE_KEY = "allBlogs_cache_v1";
-    const CACHE_DURATION = 10 * 60 * 1000; // 10 phút
+  // ================================
+  // HELPER: Fetch một blog từ directory
+  // ================================
+  const fetchBlogFromDir = async (d, config, ghHeaders) => {
+    const dirPath = config.path ? `${config.path}/${d.name}` : d.name;
 
     try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < CACHE_DURATION) {
-          setAllBlogs(data);
-          setLoading(false);
-          return; // Dùng cache, không fetch
-        }
-      }
-    } catch (e) {
-      console.warn("Cache read error:", e);
+      // Chỉ fetch README content (không fetch commit date để tiết kiệm API calls)
+      const readmeContent = await fetchReadmeContent({
+        owner: config.owner,
+        repo: config.repo,
+        branch: config.branch,
+        path: dirPath,
+      });
+
+      if (!readmeContent) return null;
+
+      const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
+
+      return {
+        id: d.name,
+        title: toTitleCase(title),
+        excerpt,
+        link: `${config.basePath || ""}/${d.name}`,
+        repoDisplayName: getRepoDisplayName(config.repo),
+        lastModified: null, // Không fetch commit date để tiết kiệm API quota
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  // ================================
+  // HELPER: Fetch tất cả blogs từ một repo
+  // ================================
+  const fetchBlogsFromRepo = async (config, ghHeaders) => {
+    try {
+      // Lấy danh sách directories từ GitHub API
+      const dirs = await fetchDirectories({
+        owner: config.owner,
+        repo: config.repo,
+        path: config.path,
+        branch: config.branch,
+        headers: ghHeaders,
+      });
+
+      // Fetch tất cả blogs song song
+      const blogPromises = dirs.map((d) =>
+        fetchBlogFromDir(d, config, ghHeaders)
+      );
+      const blogs = await Promise.all(blogPromises);
+
+      return blogs.filter((b) => b !== null);
+    } catch {
+      return [];
+    }
+  };
+
+  // ================================
+  // MAIN: Fetch blogs từ tất cả repos
+  // ================================
+  const fetchBlogs = useCallback(async () => {
+    // Bước 1: Kiểm tra cache
+    const cachedData = getCachedData(CACHE_KEY, CACHE_DURATION);
+    if (cachedData) {
+      setAllBlogs(cachedData);
+      setLoading(false);
+      return;
     }
 
+    // Bước 2: Fetch từ GitHub
     setLoading(true);
     setError("");
 
-    const ghHeaders = {};
-    const token = import.meta.env.VITE_GH_TOKEN;
-    if (token) ghHeaders["Authorization"] = `Bearer ${token}`;
-
+    const ghHeaders = getGitHubHeaders();
     const repoConfigs = [
       markdownRoutes.ctfWriteupsRepo,
       markdownRoutes.webVulnsRepo,
@@ -41,98 +114,27 @@ export function useFetchAllBlogs() {
     ];
 
     try {
-      // 🚀 Fetch tất cả repos song song
-      const repoPromises = repoConfigs.map(async (config) => {
-        try {
-          // Lấy danh sách thư mục
-          const listUrl = `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}?ref=${config.branch}`;
-          const listRes = await fetch(listUrl, { headers: ghHeaders });
-          if (!listRes.ok) throw new Error(`HTTP ${listRes.status}`);
-
-          const list = await listRes.json();
-          const dirs = list.filter((e) => e.type === "dir");
-
-          // 🚀 Fetch tất cả blogs trong repo song song
-          const blogPromises = dirs.map(async (d) => {
-            const dirPath = config.path ? `${config.path}/${d.name}` : d.name;
-
-            try {
-              // Fetch README và commit song song
-              const [readmeRes, commitsRes] = await Promise.all([
-                fetch(
-                  `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${dirPath}/README.md`
-                ),
-                fetch(
-                  `https://api.github.com/repos/${config.owner}/${config.repo}/commits?path=${encodeURIComponent(dirPath)}&page=1&per_page=1&ref=${config.branch}`,
-                  { headers: ghHeaders }
-                ),
-              ]);
-
-              if (!readmeRes.ok) return null;
-
-              const md = await readmeRes.text();
-              const { title, excerpt } = extractTitleAndExcerpt(md);
-
-              let lastModified = "";
-              if (commitsRes.ok) {
-                const commits = await commitsRes.json();
-                if (Array.isArray(commits) && commits.length > 0) {
-                  lastModified = commits[0]?.commit?.author?.date || "";
-                }
-              }
-
-              return {
-                id: d.name,
-                title: toTitleCase(title),
-                excerpt,
-                link: `${config.basePath || ""}/${d.name}`,
-                repoDisplayName: (function () {
-                  if (config.repo === "ctf-writeups") return "CTF Writeups";
-                  if (config.repo === "webvulns") return "Web Vulns";
-                  if (config.repo === "webvulnslab") return "Web Vulns Lab";
-                  return toTitleCase(config.repo.replace(/-/g, " "));
-                })(),
-                lastModified,
-              };
-            } catch (e) {
-              console.warn(`⚠️ Lỗi khi tải ${d.name}:`, e);
-              return null;
-            }
-          });
-
-          const blogs = await Promise.all(blogPromises);
-          return blogs.filter((b) => b !== null);
-        } catch (e) {
-          console.error(`❌ Lỗi khi tải từ ${config.repo}:`, e);
-          return [];
-        }
-      });
-
+      // Fetch tất cả repos song song (performance boost)
+      const repoPromises = repoConfigs.map((config) =>
+        fetchBlogsFromRepo(config, ghHeaders)
+      );
       const allResults = await Promise.all(repoPromises);
       const allFetchedBlogs = allResults.flat();
 
       setAllBlogs(allFetchedBlogs);
 
-      // 💾 Lưu vào cache
-      try {
-        localStorage.setItem(
-          CACHE_KEY,
-          JSON.stringify({
-            data: allFetchedBlogs,
-            timestamp: Date.now(),
-          })
-        );
-      } catch (e) {
-        console.warn("Cache write error:", e);
-      }
+      // Bước 3: Lưu vào cache
+      setCachedData(CACHE_KEY, allFetchedBlogs);
     } catch (e) {
-      console.error("❌ Lỗi tổng thể:", e);
       setError(e.message);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // ================================
+  // EFFECT: Auto-fetch on mount
+  // ================================
   useEffect(() => {
     fetchBlogs();
   }, [fetchBlogs]);

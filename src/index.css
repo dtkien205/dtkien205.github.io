@@ -21,12 +21,54 @@ html {
     scroll-behavior: smooth;
 }
 
+/* ===================================
+   CUSTOM SCROLLBAR - Gradient Style
+   =================================== */
+
+/* Webkit browsers (Chrome, Safari, Edge) */
 html::-webkit-scrollbar,
 body::-webkit-scrollbar,
 *::-webkit-scrollbar {
-    width: 0;
-    height: 0;
-    display: none;
+    width: 10px;
+    height: 10px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3b82f6, #8b5cf6, #ec4899);
+    border-radius: 5px;
+    transition: background 0.2s ease;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2563eb, #7c3aed, #db2777);
+}
+
+html::-webkit-scrollbar-thumb:active,
+body::-webkit-scrollbar-thumb:active,
+*::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #1d4ed8, #6d28d9, #be185d);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #8b5cf6 #f1f5f9;
+}
+
+/* Smooth scrollbar transitions */
+html,
+body {
+    scroll-padding-top: 80px;
 }
 
 /* Improve Markdown readability (GitHub-like) */
@@ -34,15 +76,19 @@ body::-webkit-scrollbar,
     color: #111827;
     background-color: #ffffff !important;
 }
+
 .markdown-body * {
     background-color: #ffffff !important;
 }
+
 .markdown-body hr {
     border-color: #e5e7eb;
 }
+
 .markdown-body blockquote {
     background-color: #ffffff !important;
 }
+
 .markdown-body p,
 .markdown-body li,
 .markdown-body a,
@@ -51,6 +97,7 @@ body::-webkit-scrollbar,
 .markdown-body blockquote {
     color: #111827;
 }
+
 .markdown-body h1,
 .markdown-body h2,
 .markdown-body h3,
@@ -59,12 +106,15 @@ body::-webkit-scrollbar,
 .markdown-body h6 {
     color: #0f172a;
 }
+
 .markdown-body a {
     text-decoration: underline;
 }
+
 .markdown-body blockquote {
     border-left-color: #111827;
 }
+
 .markdown-body pre code {
     font-size: 0.95rem;
 }
@@ -75,9 +125,11 @@ body::-webkit-scrollbar,
     color: #111827 !important;
     border: 1px solid #e5e7eb;
 }
+
 .markdown-body pre code {
     background: transparent !important;
 }
+
 .markdown-body .hljs {
     background: #ffffff !important;
     color: #111827 !important;
@@ -88,9 +140,11 @@ body::-webkit-scrollbar,
     list-style-type: disc;
     padding-left: 1.5rem;
 }
+
 .markdown-body ul ul {
     list-style-type: circle;
 }
+
 .markdown-body ol {
     list-style-type: decimal;
     padding-left: 1.5rem;

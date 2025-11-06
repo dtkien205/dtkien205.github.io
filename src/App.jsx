@@ -6,13 +6,31 @@ import Home from "./pages/Home";
 import markdownRoutes from "./config/markdownRoutes";
 import MainLayout from "./components/MainLayout";
 
+/**
+ * Main App Component - Định nghĩa routing cho toàn bộ ứng dụng
+ * Routes:
+ * - / : Home page
+ * - /ctf-writeups : CTF Writeups index
+ * - /ctf-writeups/:slug : CTF Writeups detail
+ * - /webvulns : Web Vulnerabilities index
+ * - /webvulns/:slug : Web Vulnerabilities detail
+ * - /webvulnslab : Web Vulnerabilities Lab index
+ * - /webvulnslab/:slug : Web Vulnerabilities Lab detail
+ * - /about-me : About me page (TODO)
+ */
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route element={<MainLayout />}>
+          {/* ================================ */}
+          {/* HOME PAGE */}
+          {/* ================================ */}
           <Route path="/" element={<Home />} />
-          {/* CTF Writeups */}
+
+          {/* ================================ */}
+          {/* CTF WRITEUPS */}
+          {/* ================================ */}
           <Route
             path="/ctf-writeups"
             element={
@@ -32,7 +50,10 @@ export default function App() {
               <RepoReadmePage repoConfig={markdownRoutes.ctfWriteupsRepo} />
             }
           />
-          {/* Web Vulns */}"
+
+          {/* ================================ */}
+          {/* WEB VULNERABILITIES */}
+          {/* ================================ */}
           <Route
             path="/webvulns"
             element={
@@ -51,7 +72,10 @@ export default function App() {
               <RepoReadmePage repoConfig={markdownRoutes.webVulnsRepo} />
             }
           />
-          {/* Web Vulns Lab */}
+
+          {/* ================================ */}
+          {/* WEB VULNERABILITIES LAB */}
+          {/* ================================ */}
           <Route
             path="/webvulnslab"
             element={
@@ -70,7 +94,10 @@ export default function App() {
               <RepoReadmePage repoConfig={markdownRoutes.webVulnsLabRepo} />
             }
           />
-          {/* {Ablout Me}*/}
+
+          {/* ================================ */}
+          {/* ABOUT ME (TODO) */}
+          {/* ================================ */}
           <Route path="/about-me" />
         </Route>
       </Routes>
