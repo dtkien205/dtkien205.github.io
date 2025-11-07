@@ -57,13 +57,22 @@ export default function RepoIndex({
     const dirPath = path ? `${path}/${d.name}` : d.name;
 
     try {
-      // Chỉ fetch README content (không fetch commit date để tiết kiệm API quota)
-      const readmeContent = await fetchReadmeContent({
-        owner,
-        repo,
-        branch,
-        path: dirPath,
-      });
+      // Fetch README content và last commit date song song
+      const [readmeContent, lastModified] = await Promise.all([
+        fetchReadmeContent({
+          owner,
+          repo,
+          branch,
+          path: dirPath,
+        }),
+        fetchLastCommitDate({
+          owner,
+          repo,
+          branch,
+          path: dirPath,
+          headers: ghHeaders,
+        }),
+      ]);
 
       if (!readmeContent) return null;
 
@@ -75,7 +84,7 @@ export default function RepoIndex({
         excerpt,
         rawUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/README.md`,
         githubUrl: d.html_url,
-        lastModified: null, // Không fetch để tiết kiệm API calls
+        lastModified,
       };
     } catch {
       return null;
@@ -233,8 +242,8 @@ export default function RepoIndex({
             <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
 
             <div className="relative flex flex-col sm:flex-row">
-              {/* Left: Image placeholder with stacked document icon */}
-              <div className="w-full sm:w-48 h-48 sm:h-auto bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex-shrink-0 flex items-center justify-center">
+              {/* Left: Image placeholder with stacked document icon - ẨN trên mobile (hidden), HIỆN trên sm+ */}
+              <div className="hidden sm:flex sm:w-48 sm:h-auto bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex-shrink-0 items-center justify-center">
                 <svg className="w-20 h-20 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   {/* Back document */}
                   <rect x="4" y="6" width="12" height="16" rx="1" strokeWidth="1.5" className="text-blue-400" />

@@ -28,7 +28,7 @@ export default function MarkdownPage({ sourceUrl }) {
   return (
     <div className="flex justify-center min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30">
       <section
-        className="markdown-body w-full max-w-5xl px-4 py-8"
+        className="markdown-body w-full max-w-none md:max-w-5xl px-0 md:px-4 py-8"
         style={{ background: "transparent" }}
       >
         {loading && <PageLoader text="Đang tải nội dung…" />}
@@ -45,7 +45,7 @@ export default function MarkdownPage({ sourceUrl }) {
         )}
 
         {!loading && !error && (
-          <div className="motion-safe:animate-fade-in-up bg-white rounded-xl shadow-md p-8 border border-gray-100">
+          <div className="motion-safe:animate-fade-in-up bg-white rounded-none md:rounded-xl shadow-md p-4 md:p-8 border border-gray-100">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[

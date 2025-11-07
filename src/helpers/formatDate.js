@@ -1,6 +1,6 @@
 /**
  * Format ISO date string sang định dạng tiếng Việt
- * @param {string} iso - ISO date string (vd: "2024-11-06T12:00:00Z")
+ * @param {string} iso - ISO date string
  * @returns {string} Formatted date (vd: "6 tháng 11, 2024")
  */
 export function formatDate(iso) {
