@@ -8,7 +8,6 @@ export default function Footer() {
     { label: "Home", href: "/" },
     { label: "CTF Writeups", href: "/ctf-writeups" },
     { label: "Web Vulnerabilities", href: "/webvulns" },
-    { label: "About Me", href: "/about-me" },
   ];
 
   const socialLinks = [

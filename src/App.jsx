@@ -16,7 +16,6 @@ import MainLayout from "./components/MainLayout";
  * - /webvulns/:slug : Web Vulnerabilities detail
  * - /webvulnslab : Web Vulnerabilities Lab index
  * - /webvulnslab/:slug : Web Vulnerabilities Lab detail
- * - /about-me : About me page (TODO)
  */
 export default function App() {
   return (
@@ -94,11 +93,6 @@ export default function App() {
               <RepoReadmePage repoConfig={markdownRoutes.webVulnsLabRepo} />
             }
           />
-
-          {/* ================================ */}
-          {/* ABOUT ME (TODO) */}
-          {/* ================================ */}
-          <Route path="/about-me" />
         </Route>
       </Routes>
     </BrowserRouter>
