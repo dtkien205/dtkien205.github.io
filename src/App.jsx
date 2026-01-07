@@ -115,6 +115,28 @@ export default function App() {
               <RepoReadmePage repoConfig={markdownRoutes.attackLabRepo} />
             }
           />
+
+          {/* ================================ */}
+          {/* CHEAT SHEET */}
+          {/* ================================ */}
+          <Route
+            path="/cheat-sheet"
+            element={
+              <RepoIndex
+                owner={markdownRoutes.cheatSheetRepo.owner}
+                repo={markdownRoutes.cheatSheetRepo.repo}
+                branch={markdownRoutes.cheatSheetRepo.branch}
+                path={markdownRoutes.cheatSheetRepo.path}
+                basePath="/cheat-sheet"
+              />
+            }
+          />
+          <Route
+            path="/cheat-sheet/:slug"
+            element={
+              <RepoReadmePage repoConfig={markdownRoutes.cheatSheetRepo} />
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>

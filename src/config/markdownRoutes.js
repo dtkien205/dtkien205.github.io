@@ -27,6 +27,13 @@ const markdownRoutes = {
     path: "",
     basePath: "/attack-lab",
   },
+  cheatSheetRepo: {
+    owner: "dtkien205",
+    repo: "CheatSheet",
+    branch: "master",
+    path: "",
+    basePath: "/cheat-sheet",
+  },
 };
 
 export default markdownRoutes;

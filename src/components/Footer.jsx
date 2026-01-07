@@ -2,14 +2,6 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
-
-  const quickLinks = [
-    { label: "Home", href: "/" },
-    { label: "CTF Writeups", href: "/ctf-writeups" },
-    { label: "Web Vulnerabilities", href: "/webvulns" },
-  ];
-
   const socialLinks = [
     {
       name: "Email",

@@ -16,11 +16,17 @@ export const INTRO_SECTIONS = {
     title: "Web Vulnerabilities Labs",
     description:
       "Self-built labs for practicing web application offense and defense. Each lab includes build instructions, payloads, and a flag to practice with.",
-  },  "Attack-Lab": {
+  }, "Attack-Lab": {
     labelTag: "h4",
     title: "Attack Lab",
     description:
       "Hands-on security labs focused on attack techniques and exploit development. Practice offensive security skills with real-world attack scenarios and defensive countermeasures.",
-  },};
+  }, CheatSheet: {
+    labelTag: "h4",
+    title: "Cheat Sheet",
+    description:
+      "Quick reference guides and cheat sheets for various security tools, commands, and techniques. Essential commands and best practices at your fingertips.",
+  },
+};
 
 export default INTRO_SECTIONS;

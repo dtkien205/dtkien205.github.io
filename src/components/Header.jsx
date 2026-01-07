@@ -7,6 +7,7 @@ const navItems = [
   { label: "Web Vulnerabilities", href: "/webvulns" },
   { label: "Web Lab", href: "/webvulnslab" },
   { label: "Attack Lab", href: "/attack-lab" },
+  { label: "Cheat Sheet", href: "/cheat-sheet" },
 ];
 
 export default function Header() {

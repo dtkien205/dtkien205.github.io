@@ -112,6 +112,7 @@ export function useFetchAllBlogs() {
       markdownRoutes.webVulnsRepo,
       markdownRoutes.webVulnsLabRepo,
       markdownRoutes.attackLabRepo,
+      markdownRoutes.cheatSheetRepo,
     ];
 
     try {
