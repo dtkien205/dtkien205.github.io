@@ -6,6 +6,7 @@ const navItems = [
   { label: "CTF Writeups", href: "/ctf-writeups" },
   { label: "Web Vulnerabilities", href: "/webvulns" },
   { label: "Web Lab", href: "/webvulnslab" },
+  { label: "Attack Lab", href: "/attack-lab" },
 ];
 
 export default function Header() {

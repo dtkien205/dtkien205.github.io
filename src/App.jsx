@@ -93,6 +93,28 @@ export default function App() {
               <RepoReadmePage repoConfig={markdownRoutes.webVulnsLabRepo} />
             }
           />
+
+          {/* ================================ */}
+          {/* ATTACK LAB */}
+          {/* ================================ */}
+          <Route
+            path="/attack-lab"
+            element={
+              <RepoIndex
+                owner={markdownRoutes.attackLabRepo.owner}
+                repo={markdownRoutes.attackLabRepo.repo}
+                branch={markdownRoutes.attackLabRepo.branch}
+                path={markdownRoutes.attackLabRepo.path}
+                basePath="/attack-lab"
+              />
+            }
+          />
+          <Route
+            path="/attack-lab/:slug"
+            element={
+              <RepoReadmePage repoConfig={markdownRoutes.attackLabRepo} />
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>

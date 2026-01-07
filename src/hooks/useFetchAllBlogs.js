@@ -111,6 +111,7 @@ export function useFetchAllBlogs() {
       markdownRoutes.ctfWriteupsRepo,
       markdownRoutes.webVulnsRepo,
       markdownRoutes.webVulnsLabRepo,
+      markdownRoutes.attackLabRepo,
     ];
 
     try {

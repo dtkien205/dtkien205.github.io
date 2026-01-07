@@ -20,6 +20,13 @@ const markdownRoutes = {
     path: "",
     basePath: "/webvulnslab",
   },
+  attackLabRepo: {
+    owner: "dtkien205",
+    repo: "Attack-Lab",
+    branch: "master",
+    path: "",
+    basePath: "/attack-lab",
+  },
 };
 
 export default markdownRoutes;
