@@ -4,14 +4,18 @@
  */
 
 import https from 'https';
+import dotenv from 'dotenv';
+
+// Load .env file
+dotenv.config();
 
 // Lấy token từ environment variable hoặc để trống (unauthenticated)
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+const GITHUB_TOKEN = process.env.VITE_GH_TOKEN || process.env.GITHUB_TOKEN || '';
 
-function checkRateLimit() {
+function makeRequest(path) {
     const options = {
         hostname: 'api.github.com',
-        path: '/rate_limit',
+        path: path,
         method: 'GET',
         headers: {
             'User-Agent': 'Kido-Blogs-Rate-Limit-Checker',
@@ -29,7 +33,8 @@ function checkRateLimit() {
 
             res.on('end', () => {
                 try {
-                    resolve(JSON.parse(data));
+                    const result = JSON.parse(data);
+                    resolve({ status: res.statusCode, data: result });
                 } catch (error) {
                     reject(error);
                 }
@@ -44,11 +49,43 @@ function checkRateLimit() {
     });
 }
 
+function checkRateLimit() {
+    return makeRequest('/rate_limit');
+}
+
+function checkUser() {
+    return makeRequest('/user');
+}
+
 async function main() {
     try {
-        console.log('🔍 Đang kiểm tra GitHub API Rate Limit...\n');
+        console.log('🔍 Đang kiểm tra GitHub API Rate Limit & Token...\n');
 
-        const data = await checkRateLimit();
+        // Kiểm tra token validity
+        if (GITHUB_TOKEN) {
+            console.log('🔐 Đang xác thực token...');
+            const userResponse = await checkUser();
+
+            if (userResponse.status === 200) {
+                console.log('✅ Token HOẠT ĐỘNG!');
+                console.log(`   👤 User: ${userResponse.data.login}`);
+                console.log(`   📧 Email: ${userResponse.data.email || 'N/A'}`);
+                console.log(`   🏢 Company: ${userResponse.data.company || 'N/A'}`);
+                console.log(`   🔗 Profile: ${userResponse.data.html_url}`);
+                console.log(`   📅 Created: ${new Date(userResponse.data.created_at).toLocaleDateString('vi-VN')}`);
+            } else if (userResponse.status === 401) {
+                console.log('❌ Token KHÔNG HỢP LỆ hoặc ĐÃ HẾT HẠN!');
+                console.log('   Error:', userResponse.data.message);
+                process.exit(1);
+            } else {
+                console.log(`⚠️  Token response: ${userResponse.status}`);
+                console.log('   Message:', userResponse.data.message || 'Unknown error');
+            }
+            console.log();
+        }
+
+        const response = await checkRateLimit();
+        const data = response.data;
         const core = data.resources.core;
         const search = data.resources.search;
 

@@ -16,3 +16,4 @@ export {
 export { groupByRepo } from "./groupByRepo";
 export { humanizeRepoName } from "./humanizeRepoName";
 export { toTitleCase } from "./toTitleCase";
+export { sortBlogs } from "./sortBlogs";

@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import IntroPage from "../components/IntroPage";
+import SortFilter from "../components/SortFilter";
 import { toTitleCase } from "../helpers/toTitleCase";
 import { extractTitleAndExcerpt } from "../helpers/extractTitleAndExcerpt";
 import { formatDate } from "../helpers/formatDate";
+import { sortBlogs } from "../helpers/sortBlogs";
 import { getCachedData, setCachedData } from "../helpers/cacheUtils";
 import {
   getGitHubHeaders,
@@ -48,6 +50,7 @@ export default function RepoIndex({
   const [hasMore, setHasMore] = React.useState(true);
   const [loadingMore, setLoadingMore] = React.useState(false);
   const [infiniteEnabled, setInfiniteEnabled] = React.useState(false);
+  const [sortBy, setSortBy] = React.useState("date-desc");
 
   // ================================
   // HELPER: Fetch một blog từ directory
@@ -158,6 +161,25 @@ export default function RepoIndex({
   }, [owner, repo, branch, path]);
 
   // ================================
+  // MEMO: Sắp xếp blogs
+  // ================================
+  const sortedBlogs = React.useMemo(() => {
+    return sortBlogs(allBlogs, sortBy);
+  }, [allBlogs, sortBy]);
+
+  // ================================
+  // EFFECT: Cập nhật displayedItems khi sortedBlogs thay đổi
+  // ================================
+  React.useEffect(() => {
+    if (sortedBlogs.length === 0) return;
+
+    setDisplayedItems(sortedBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
+    setHasMore(sortedBlogs.length > INITIAL_ITEMS_TO_SHOW);
+    setPage(1);
+    setInfiniteEnabled(false);
+  }, [sortedBlogs]);
+
+  // ================================
   // FUNCTION: Load thêm items
   // ================================
   const loadMoreItems = React.useCallback(() => {
@@ -167,7 +189,7 @@ export default function RepoIndex({
 
     const startIndex = displayedItems.length;
     const endIndex = startIndex + INITIAL_ITEMS_TO_SHOW;
-    const newItems = allBlogs.slice(startIndex, endIndex);
+    const newItems = sortedBlogs.slice(startIndex, endIndex);
 
     if (newItems.length === 0) {
       setHasMore(false);
@@ -176,10 +198,10 @@ export default function RepoIndex({
     }
 
     setDisplayedItems((prev) => [...prev, ...newItems]);
-    setHasMore(endIndex < allBlogs.length);
+    setHasMore(endIndex < sortedBlogs.length);
     setPage((p) => p + 1);
     setLoadingMore(false);
-  }, [allBlogs, displayedItems.length, hasMore, loadingMore]);
+  }, [sortedBlogs, displayedItems.length, hasMore, loadingMore]);
 
   // ================================
   // EFFECT: Infinite scroll (chỉ khi enabled)
@@ -226,6 +248,9 @@ export default function RepoIndex({
       <div className="mb-12 motion-safe:animate-fade-in-up motion-reduce:animate-none">
         <IntroPage repo={repo} />
       </div>
+
+      {/* Sort filter */}
+      <SortFilter sortBy={sortBy} setSortBy={setSortBy} />
 
       {/* Blog list với horizontal card design */}
       <div className="space-y-6">
