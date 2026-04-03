@@ -5,6 +5,7 @@ import RepoReadmePage from "./pages/RepoReadmePage";
 import Home from "./pages/Home";
 import markdownRoutes from "./config/markdownRoutes";
 import MainLayout from "./components/MainLayout";
+import { useWarmupGithubCache } from "./hooks/useWarmupGithubCache";
 
 /**
  * Main App Component - Định nghĩa routing cho toàn bộ ứng dụng
@@ -18,6 +19,8 @@ import MainLayout from "./components/MainLayout";
  * - /webvulnslab/:slug : Web Vulnerabilities Lab detail
  */
 export default function App() {
+  useWarmupGithubCache();
+
   return (
     <BrowserRouter>
       <Routes>
