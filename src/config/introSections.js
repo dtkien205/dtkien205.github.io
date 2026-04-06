@@ -27,6 +27,18 @@ export const INTRO_SECTIONS = {
     description:
       "Quick reference guides and cheat sheets for various security tools, commands, and techniques. Essential commands and best practices at your fingertips.",
   },
+  Project: {
+    labelTag: "h4",
+    title: "Project",
+    description:
+      "Projects I’ve worked on while learning and experimenting.",
+  },
+  Other: {
+    labelTag: "h4",
+    title: "Other",
+    description:
+      "Security labs and reference materials. Includes attack techniques, exploit development, and quick reference guides for various security tools and commands.",
+  },
 };
 
 export default INTRO_SECTIONS;

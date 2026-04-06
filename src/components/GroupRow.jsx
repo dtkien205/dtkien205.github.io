@@ -32,10 +32,20 @@ export default function GroupRow({
       {/* Section header với gradient underline */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <span className="inline-block w-1.5 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
-            {humanizeRepoName(repoDisplayName)}
-          </h2>
+          {data.basePath ? (
+            <Link
+              to={data.basePath}
+              className="group/title text-3xl font-bold text-gray-900 flex items-center gap-3 hover:text-blue-700 transition-colors"
+            >
+              <span className="inline-block w-1.5 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
+              {humanizeRepoName(repoDisplayName)}
+            </Link>
+          ) : (
+            <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <span className="inline-block w-1.5 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
+              {humanizeRepoName(repoDisplayName)}
+            </h2>
+          )}
 
           {showSeeAll && (
             <Link

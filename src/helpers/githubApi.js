@@ -80,7 +80,8 @@ export async function fetchLastCommitDate({ owner, repo, path, branch, headers }
  */
 export async function fetchReadmeContent({ owner, repo, branch, path }) {
     try {
-        const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}/README.md`;
+        const normalizedPath = path ? `${path}/` : "";
+        const url = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${normalizedPath}README.md`;
         const response = await fetch(url);
 
         if (!response.ok) return null;

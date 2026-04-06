@@ -4,9 +4,12 @@ import MarkdownPage from "../components/MarkdownPage";
 
 export default function RepoReadmePage({ repoConfig }) {
   const { slug } = useParams();
-  const { owner, repo, branch = "main", path = "" } = repoConfig;
+  const { owner, repo, branch = "main", path = "", rootReadme = false } =
+    repoConfig;
 
-  const dirPath = `${path ? path + "/" : ""}${slug}/`;
+  const dirPath = rootReadme
+    ? `${path ? path + "/" : ""}`
+    : `${path ? path + "/" : ""}${slug}/`;
   const filePath = `${dirPath}README.md`;
 
   // Nội dung README (markdown)

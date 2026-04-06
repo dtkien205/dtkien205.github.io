@@ -34,6 +34,20 @@ const markdownRoutes = {
     path: "",
     basePath: "/cheat-sheet",
   },
+  licensePlateDetectionRepo: {
+    owner: "dtkien205",
+    repo: "LicensePlateDetection",
+    branch: "master",
+    path: "",
+    basePath: "/license-plate-detection",
+  },
+  logAnomalyDetectionRepo: {
+    owner: "dtkien205",
+    repo: "Log-based-Anomaly-Detection",
+    branch: "master",
+    path: "",
+    basePath: "/log-anomaly-detection",
+  },
 };
 
 export default markdownRoutes;

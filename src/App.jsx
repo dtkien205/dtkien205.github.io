@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import RepoIndex from "./pages/RepoIndex";
 import RepoReadmePage from "./pages/RepoReadmePage";
+import CombinedRepoIndex from "./pages/CombinedRepoIndex";
 import Home from "./pages/Home";
 import markdownRoutes from "./config/markdownRoutes";
 import MainLayout from "./components/MainLayout";
@@ -98,20 +99,72 @@ export default function App() {
           />
 
           {/* ================================ */}
-          {/* ATTACK LAB */}
+          {/* PROJECT (License Plate Detection + Log Anomaly Detection) */}
           {/* ================================ */}
           <Route
-            path="/attack-lab"
+            path="/project"
             element={
-              <RepoIndex
-                owner={markdownRoutes.attackLabRepo.owner}
-                repo={markdownRoutes.attackLabRepo.repo}
-                branch={markdownRoutes.attackLabRepo.branch}
-                path={markdownRoutes.attackLabRepo.path}
-                basePath="/attack-lab"
+              <CombinedRepoIndex
+                repos={[
+                  {
+                    owner: markdownRoutes.licensePlateDetectionRepo.owner,
+                    repo: markdownRoutes.licensePlateDetectionRepo.repo,
+                    branch: markdownRoutes.licensePlateDetectionRepo.branch,
+                    path: markdownRoutes.licensePlateDetectionRepo.path,
+                    displayName: "License Plate Detection",
+                    basePath: "/license-plate-detection",
+                    detailPath: "/license-plate-detection",
+                    mode: "root-readme",
+                  },
+                  {
+                    owner: markdownRoutes.logAnomalyDetectionRepo.owner,
+                    repo: markdownRoutes.logAnomalyDetectionRepo.repo,
+                    branch: markdownRoutes.logAnomalyDetectionRepo.branch,
+                    path: markdownRoutes.logAnomalyDetectionRepo.path,
+                    displayName: "Log Anomaly Detection",
+                    basePath: "/log-anomaly-detection",
+                    detailPath: "/log-anomaly-detection",
+                    mode: "root-readme",
+                  },
+                ]}
+                basePath="/project"
               />
             }
           />
+
+          {/* ================================ */}
+          {/* OTHER (Attack Lab + Cheat Sheet) */}
+          {/* ================================ */}
+          <Route
+            path="/other"
+            element={
+              <CombinedRepoIndex
+                repos={[
+                  {
+                    owner: markdownRoutes.attackLabRepo.owner,
+                    repo: markdownRoutes.attackLabRepo.repo,
+                    branch: markdownRoutes.attackLabRepo.branch,
+                    path: markdownRoutes.attackLabRepo.path,
+                    displayName: "Attack Lab",
+                    basePath: "/attack-lab",
+                  },
+                  {
+                    owner: markdownRoutes.cheatSheetRepo.owner,
+                    repo: markdownRoutes.cheatSheetRepo.repo,
+                    branch: markdownRoutes.cheatSheetRepo.branch,
+                    path: markdownRoutes.cheatSheetRepo.path,
+                    displayName: "Cheat Sheet",
+                    basePath: "/cheat-sheet",
+                  },
+                ]}
+                basePath="/other"
+              />
+            }
+          />
+
+          {/* ================================ */}
+          {/* ATTACK LAB */}
+          {/* ================================ */}
           <Route
             path="/attack-lab/:slug"
             element={
@@ -123,21 +176,51 @@ export default function App() {
           {/* CHEAT SHEET */}
           {/* ================================ */}
           <Route
-            path="/cheat-sheet"
-            element={
-              <RepoIndex
-                owner={markdownRoutes.cheatSheetRepo.owner}
-                repo={markdownRoutes.cheatSheetRepo.repo}
-                branch={markdownRoutes.cheatSheetRepo.branch}
-                path={markdownRoutes.cheatSheetRepo.path}
-                basePath="/cheat-sheet"
-              />
-            }
-          />
-          <Route
             path="/cheat-sheet/:slug"
             element={
               <RepoReadmePage repoConfig={markdownRoutes.cheatSheetRepo} />
+            }
+          />
+
+          {/* ================================ */}
+          {/* LICENSE PLATE DETECTION */}
+          {/* ================================ */}
+          <Route
+            path="/license-plate-detection/:slug"
+            element={
+              <RepoReadmePage repoConfig={markdownRoutes.licensePlateDetectionRepo} />
+            }
+          />
+          <Route
+            path="/license-plate-detection"
+            element={
+              <RepoReadmePage
+                repoConfig={{
+                  ...markdownRoutes.licensePlateDetectionRepo,
+                  rootReadme: true,
+                }}
+              />
+            }
+          />
+
+          {/* ================================ */}
+          {/* LOG-BASED ANOMALY DETECTION */}
+          {/* ================================ */}
+          <Route
+            path="/log-anomaly-detection/:slug"
+            element={
+              <RepoReadmePage repoConfig={markdownRoutes.logAnomalyDetectionRepo} />
+            }
+          />
+          <Route
+            path="/log-anomaly-detection"
+            element={
+              <RepoReadmePage
+                repoConfig={{
+                  ...markdownRoutes.logAnomalyDetectionRepo,
+                  rootReadme: true,
+                }}
+              />
             }
           />
         </Route>
