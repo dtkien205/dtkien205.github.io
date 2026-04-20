@@ -161,8 +161,8 @@ export default function CombinedRepoIndex({ repos, basePath }) {
             // Check cache từ Home (reuse data từ useFetchAllBlogs)
             const homeAllBlogs = getCachedData(homeAllBlogsCacheKey, CACHE_DURATION);
             if (homeAllBlogs && active) {
-                // Lọc blogs thuộc basePath hiện tại
-                const filteredBlogs = homeAllBlogs.filter((b) => b.link?.includes(basePath));
+                // Lọc blogs thuộc basePath hiện tại (e.g. "/project" hoặc "/other")
+                const filteredBlogs = homeAllBlogs.filter((b) => b.link?.startsWith(basePath + "/"));
 
                 if (filteredBlogs.length > 0) {
                     setAllBlogs(filteredBlogs);

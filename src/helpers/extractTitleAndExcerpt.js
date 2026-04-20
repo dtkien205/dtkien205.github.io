@@ -12,8 +12,27 @@ export function extractTitleAndExcerpt(md) {
   const lines = md.split("\n");
   let title = lines.find((l) => l.trim().startsWith("# ")) || "";
   title = title.replace(/^#\s+/, "").trim();
-  const para = lines.find((l) => l.trim() && !l.trim().startsWith("#")) || "";
-  const excerpt = para.length > 280 ? para.slice(0, 277) + "…" : para;
+
+  // Tìm paragraph đầu tiên không phải heading và không phải ảnh
+  let para = "";
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Skip heading, empty line, code fence, và dòng chỉ có ảnh
+    if (
+      trimmed.startsWith("#") ||
+      !trimmed ||
+      trimmed.startsWith("```") ||
+      /^!\[.*\]\(.*\)\s*$/.test(trimmed) // dòng chỉ có ảnh markdown
+    ) {
+      continue;
+    }
+    para = trimmed;
+    break;
+  }
+
+  // Bỏ ảnh markdown khỏi excerpt
+  const excerptClean = para.replace(/!\[.*?\]\(.*?\)/g, "").trim();
+  const excerpt = excerptClean.length > 280 ? excerptClean.slice(0, 277) + "…" : excerptClean;
 
   const result = { title: title || "README", excerpt };
 

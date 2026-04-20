@@ -125,11 +125,12 @@ export default function RepoIndex({
       // Bước 1b: Kiểm tra cache từ Home (reuse data từ useFetchAllBlogs)
       const homeAllBlogs = getCachedData(homeAllBlogsCacheKey, CACHE_DURATION);
       if (homeAllBlogs && active) {
-        // Lọc blogs thuộc repo hiện tại
+        // Filter blogs thuộc repo hiện tại
         const filteredBlogs = homeAllBlogs.filter((b) => {
-          // Suy ra repo từ link: "/project/BuckeyeCTF2025" → "BuckeyeCTF2025"
-          const match = b.link?.match(/\/([^/]+)$/) || [];
-          return b.link?.includes(basePath);
+          // So sánh repo name (e.g. "dtkien205/WriteUpCTF" → "WriteUpCTF")
+          const blogRepo = b.link?.split("/")[1]; // Extract repo slug from link
+          const currentRepo = basePath?.split("/")[1]; // Extract from basePath
+          return blogRepo === currentRepo;
         });
 
         if (filteredBlogs.length > 0) {
