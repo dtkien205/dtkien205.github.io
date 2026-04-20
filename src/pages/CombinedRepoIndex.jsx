@@ -144,9 +144,10 @@ export default function CombinedRepoIndex({ repos, basePath }) {
             const cacheKey = `combinedRepoIndex_${basePath}_${repos
                 .map((r) => `${r.owner}/${r.repo}/${r.mode || "dir"}/${r.path || ""}`)
                 .join("|")}_v2`;
+            const homeAllBlogsCacheKey = "allBlogs_cache_v1";
 
-            // Check cache
-            const cachedData = getCachedData(cacheKey, CACHE_DURATION);
+            // Check cache repo-specific
+            let cachedData = getCachedData(cacheKey, CACHE_DURATION);
             if (cachedData && active) {
                 setAllBlogs(cachedData);
                 setDisplayedItems(cachedData.slice(0, INITIAL_ITEMS_TO_SHOW));
@@ -155,6 +156,23 @@ export default function CombinedRepoIndex({ repos, basePath }) {
                 setInfiniteEnabled(false);
                 setLoading(false);
                 return;
+            }
+
+            // Check cache từ Home (reuse data từ useFetchAllBlogs)
+            const homeAllBlogs = getCachedData(homeAllBlogsCacheKey, CACHE_DURATION);
+            if (homeAllBlogs && active) {
+                // Lọc blogs thuộc basePath hiện tại
+                const filteredBlogs = homeAllBlogs.filter((b) => b.link?.includes(basePath));
+                
+                if (filteredBlogs.length > 0) {
+                    setAllBlogs(filteredBlogs);
+                    setDisplayedItems(filteredBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
+                    setHasMore(filteredBlogs.length > INITIAL_ITEMS_TO_SHOW);
+                    setPage(1);
+                    setInfiniteEnabled(false);
+                    setLoading(false);
+                    return;
+                }
             }
 
             try {

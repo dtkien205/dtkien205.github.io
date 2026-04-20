@@ -107,10 +107,11 @@ export default function RepoIndex({
     let active = true;
 
     async function loadBlogs() {
-      const cacheKey = `repoIndex_${owner}_${repo}_${path}_v1`;
+      const repoSpecificCacheKey = `repoIndex_${owner}_${repo}_${path}_v1`;
+      const homeAllBlogsCacheKey = "allBlogs_cache_v1";
 
-      // Bước 1: Kiểm tra cache
-      const cachedData = getCachedData(cacheKey, CACHE_DURATION);
+      // Bước 1: Kiểm tra cache repo-specific
+      let cachedData = getCachedData(repoSpecificCacheKey, CACHE_DURATION);
       if (cachedData && active) {
         setAllBlogs(cachedData);
         setDisplayedItems(cachedData.slice(0, INITIAL_ITEMS_TO_SHOW));
@@ -119,6 +120,27 @@ export default function RepoIndex({
         setInfiniteEnabled(false);
         setLoading(false);
         return;
+      }
+
+      // Bước 1b: Kiểm tra cache từ Home (reuse data từ useFetchAllBlogs)
+      const homeAllBlogs = getCachedData(homeAllBlogsCacheKey, CACHE_DURATION);
+      if (homeAllBlogs && active) {
+        // Lọc blogs thuộc repo hiện tại
+        const filteredBlogs = homeAllBlogs.filter((b) => {
+          // Suy ra repo từ link: "/project/BuckeyeCTF2025" → "BuckeyeCTF2025"
+          const match = b.link?.match(/\/([^/]+)$/) || [];
+          return b.link?.includes(basePath);
+        });
+        
+        if (filteredBlogs.length > 0) {
+          setAllBlogs(filteredBlogs);
+          setDisplayedItems(filteredBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
+          setHasMore(filteredBlogs.length > INITIAL_ITEMS_TO_SHOW);
+          setPage(1);
+          setInfiniteEnabled(false);
+          setLoading(false);
+          return;
+        }
       }
 
       // Bước 2: Fetch từ GitHub
@@ -151,7 +173,7 @@ export default function RepoIndex({
           setInfiniteEnabled(false);
 
           // Bước 3: Lưu vào cache
-          setCachedData(cacheKey, results);
+          setCachedData(repoSpecificCacheKey, results);
         }
       } catch (e) {
         if (active) setError(e.message);
