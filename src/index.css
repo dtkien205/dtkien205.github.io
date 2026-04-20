@@ -71,6 +71,17 @@ body {
     scroll-padding-top: 80px;
 }
 
+/* TOC scrollbar: always hidden */
+.toc-scroll-on-hover {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.toc-scroll-on-hover::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
 /* Improve Markdown readability (GitHub-like) */
 .markdown-body {
     color: #111827;
