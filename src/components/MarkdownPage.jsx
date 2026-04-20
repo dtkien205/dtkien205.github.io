@@ -9,6 +9,7 @@ import { useHighlightCode } from "../hooks/useHighlightCode";
 import { useScrollToHash } from "../hooks/useScrollToHash";
 import PageLoader from "../components/PageLoader";
 import TableOfContents from "../components/TableOfContents";
+import { stripCoverImageFromMarkdown } from "../helpers/extractCoverImageFromMarkdown";
 
 export default function MarkdownPage({ sourceUrl }) {
   const { content, error, loading } = useMarkdownFetch(sourceUrl);
@@ -25,6 +26,10 @@ export default function MarkdownPage({ sourceUrl }) {
   const isAbs = (u) =>
     /^[a-z][a-z0-9+.-]*:|^\/\//i.test(u) || u.startsWith("#");
   const urlTransform = (u) => (isAbs(u) ? u : new URL(u, baseOf).toString());
+  const renderedContent = React.useMemo(
+    () => stripCoverImageFromMarkdown(content),
+    [content]
+  );
 
   return (
     <div className="w-full flex min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/30 lg:pl-[272px]">
@@ -58,7 +63,7 @@ export default function MarkdownPage({ sourceUrl }) {
               ]}
               urlTransform={urlTransform}
             >
-              {content}
+              {renderedContent}
             </ReactMarkdown>
           </div>
         )}
