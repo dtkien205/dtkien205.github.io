@@ -86,6 +86,13 @@ export default function RepoIndex({
         `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/`
       );
 
+      console.log("[fetchBlogFromDir]", {
+        id: d.name,
+        urlBase: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/`,
+        contentLength: readmeContent.length,
+        coverImageUrl,
+      });
+
       return {
         id: d.name,
         title: toTitleCase(title),
@@ -124,14 +131,9 @@ export default function RepoIndex({
 
       // Bước 1b: Kiểm tra cache từ Home (reuse data từ useFetchAllBlogs)
       const homeAllBlogs = getCachedData(homeAllBlogsCacheKey, CACHE_DURATION);
-      if (homeAllBlogs && active) {
-        // Filter blogs thuộc repo hiện tại
-        const filteredBlogs = homeAllBlogs.filter((b) => {
-          // So sánh repo name (e.g. "dtkien205/WriteUpCTF" → "WriteUpCTF")
-          const blogRepo = b.link?.split("/")[1]; // Extract repo slug from link
-          const currentRepo = basePath?.split("/")[1]; // Extract from basePath
-          return blogRepo === currentRepo;
-        });
+      if (homeAllBlogs && basePath && active) {
+        // Filter blogs thuộc repo hiện tại (startsWith basePath)
+        const filteredBlogs = homeAllBlogs.filter((b) => b.link?.startsWith(basePath + "/"));
 
         if (filteredBlogs.length > 0) {
           setAllBlogs(filteredBlogs);
@@ -144,7 +146,7 @@ export default function RepoIndex({
         }
       }
 
-      // Bước 2: Fetch từ GitHub
+      // Bước 2: Fetch từ GitHub (fallback nếu cache không có hoặc filter không được)
       try {
         setLoading(true);
         setError("");
@@ -173,11 +175,11 @@ export default function RepoIndex({
           setPage(1);
           setInfiniteEnabled(false);
 
-          // Bước 3: Lưu vào cache
+          // Bước 3: Lưu vào cache (cả repo-specific và merge vào Home cache)
           setCachedData(repoSpecificCacheKey, results);
         }
       } catch (e) {
-        if (active) setError(e.message);
+        if (active) setError(e.message || "Failed to load blogs");
       } finally {
         if (active) setLoading(false);
       }
@@ -187,7 +189,7 @@ export default function RepoIndex({
     return () => {
       active = false;
     };
-  }, [owner, repo, branch, path]);
+  }, [owner, repo, branch, path, basePath, fetchBlogFromDir]);
 
   // ================================
   // MEMO: Sắp xếp blogs
@@ -393,13 +395,6 @@ export default function RepoIndex({
               </div>
             </div>
           </article>
-        ))}
-      </div>
-
-      {/* Empty state */}
-      {displayedItems.length === 0 && !loading && (
-        <p className="text-gray-600">
-          Không tìm thấy README.md trong các thư mục.
         </p>
       )}
 

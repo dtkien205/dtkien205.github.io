@@ -20,6 +20,7 @@ function extractImageFromLine(line) {
 
 /**
  * Lấy ảnh cover đầu tiên nằm giữa H1 đầu tiên và H2 đầu tiên.
+ * Nếu không có H1 thì tìm từ đầu file.
  * Nếu không có ảnh trong đúng vùng này thì trả về chuỗi rỗng để dùng ảnh mặc định.
  */
 export function extractCoverImageFromMarkdown(md, baseUrl = "") {
@@ -28,9 +29,21 @@ export function extractCoverImageFromMarkdown(md, baseUrl = "") {
     const lines = md.split("\n");
     let inCodeFence = false;
     let seenFirstH1 = false;
+    let hasH1 = false;
 
     const isHeading = (trimmed) => trimmed.match(/^(#{1,6})\s+/);
 
+    // First pass: check if there's an H1
+    for (const line of lines) {
+        const trimmed = line.trim();
+        const headingMatch = isHeading(trimmed);
+        if (headingMatch && headingMatch[1].length === 1) {
+            hasH1 = true;
+            break;
+        }
+    }
+
+    // Second pass: extract image
     for (const line of lines) {
         const trimmed = line.trim();
 
@@ -45,22 +58,32 @@ export function extractCoverImageFromMarkdown(md, baseUrl = "") {
         if (headingMatch) {
             const level = headingMatch[1].length;
 
-            if (level === 1 && !seenFirstH1) {
-                seenFirstH1 = true;
+            // If there's H1, follow original logic (H1->H2)
+            if (hasH1) {
+                if (level === 1 && !seenFirstH1) {
+                    seenFirstH1 = true;
+                    continue;
+                }
+
+                if (level === 2 && seenFirstH1) {
+                    break;
+                }
+
+                continue;
+            } else {
+                // If no H1, stop at first H2 or any heading level > 1
+                if (level > 1) {
+                    break;
+                }
                 continue;
             }
-
-            if (level === 2 && seenFirstH1) {
-                break;
-            }
-
-            continue;
         }
 
-        if (seenFirstH1) {
-            const imageUrl = extractImageFromLine(line);
-            if (imageUrl) return resolveUrl(imageUrl, baseUrl);
-        }
+        // Extract image: either after H1 (if exists) or from start (if no H1)
+        if (hasH1 && !seenFirstH1) continue; // Skip until we find H1
+        
+        const imageUrl = extractImageFromLine(line);
+        if (imageUrl) return resolveUrl(imageUrl, baseUrl);
     }
 
     return "";
