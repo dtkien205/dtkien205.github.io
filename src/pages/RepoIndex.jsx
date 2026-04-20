@@ -86,13 +86,6 @@ export default function RepoIndex({
         `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/`
       );
 
-      console.log("[fetchBlogFromDir]", {
-        id: d.name,
-        urlBase: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/`,
-        contentLength: readmeContent.length,
-        coverImageUrl,
-      });
-
       return {
         id: d.name,
         title: toTitleCase(title),
@@ -114,8 +107,8 @@ export default function RepoIndex({
     let active = true;
 
     async function loadBlogs() {
-      const repoSpecificCacheKey = `repoIndex_${owner}_${repo}_${path}_v1`;
-      const homeAllBlogsCacheKey = "allBlogs_cache_v1";
+      const repoSpecificCacheKey = `repoIndex_${owner}_${repo}_${path}_v2`;
+      const homeAllBlogsCacheKey = "allBlogs_cache_v2";
 
       // Bước 1: Kiểm tra cache repo-specific
       let cachedData = getCachedData(repoSpecificCacheKey, CACHE_DURATION);
@@ -395,8 +388,8 @@ export default function RepoIndex({
               </div>
             </div>
           </article>
-        </p>
-      )}
+        ))}
+      </div>
 
       {/* Load more button */}
       {hasMore && !loading && (

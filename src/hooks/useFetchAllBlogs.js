@@ -15,7 +15,7 @@ import markdownRoutes from "../config/markdownRoutes";
 // ================================
 // CONSTANTS
 // ================================
-const CACHE_KEY = "allBlogs_cache_v1";
+const CACHE_KEY = "allBlogs_cache_v2";
 const CACHE_DURATION = 60 * 60 * 1000; // 1 giờ (tăng từ 10 phút)
 
 /**

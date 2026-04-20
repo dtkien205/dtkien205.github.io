@@ -144,7 +144,7 @@ export default function CombinedRepoIndex({ repos, basePath }) {
             const cacheKey = `combinedRepoIndex_${basePath}_${repos
                 .map((r) => `${r.owner}/${r.repo}/${r.mode || "dir"}/${r.path || ""}`)
                 .join("|")}_v2`;
-            const homeAllBlogsCacheKey = "allBlogs_cache_v1";
+            const homeAllBlogsCacheKey = "allBlogs_cache_v2";
 
             // Check cache repo-specific
             let cachedData = getCachedData(cacheKey, CACHE_DURATION);
@@ -160,7 +160,7 @@ export default function CombinedRepoIndex({ repos, basePath }) {
 
             // Check cache từ Home (reuse data từ useFetchAllBlogs)
             const homeAllBlogs = getCachedData(homeAllBlogsCacheKey, CACHE_DURATION);
-            if (homeAllBlogs && active) {
+            if (homeAllBlogs && basePath && active) {
                 // Lọc blogs thuộc basePath hiện tại (e.g. "/project" hoặc "/other")
                 const filteredBlogs = homeAllBlogs.filter((b) => b.link?.startsWith(basePath + "/"));
 
@@ -222,7 +222,7 @@ export default function CombinedRepoIndex({ repos, basePath }) {
                     setCachedData(cacheKey, allResults);
                 }
             } catch (e) {
-                if (active) setError(e.message);
+                if (active) setError(e.message || "Failed to load blogs");
             } finally {
                 if (active) setLoading(false);
             }

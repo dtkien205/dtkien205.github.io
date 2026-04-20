@@ -81,7 +81,7 @@ export function extractCoverImageFromMarkdown(md, baseUrl = "") {
 
         // Extract image: either after H1 (if exists) or from start (if no H1)
         if (hasH1 && !seenFirstH1) continue; // Skip until we find H1
-        
+
         const imageUrl = extractImageFromLine(line);
         if (imageUrl) return resolveUrl(imageUrl, baseUrl);
     }
