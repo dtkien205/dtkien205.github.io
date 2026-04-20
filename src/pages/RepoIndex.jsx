@@ -131,7 +131,7 @@ export default function RepoIndex({
           const match = b.link?.match(/\/([^/]+)$/) || [];
           return b.link?.includes(basePath);
         });
-        
+
         if (filteredBlogs.length > 0) {
           setAllBlogs(filteredBlogs);
           setDisplayedItems(filteredBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));

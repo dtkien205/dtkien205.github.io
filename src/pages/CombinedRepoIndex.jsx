@@ -163,7 +163,7 @@ export default function CombinedRepoIndex({ repos, basePath }) {
             if (homeAllBlogs && active) {
                 // Lọc blogs thuộc basePath hiện tại
                 const filteredBlogs = homeAllBlogs.filter((b) => b.link?.includes(basePath));
-                
+
                 if (filteredBlogs.length > 0) {
                     setAllBlogs(filteredBlogs);
                     setDisplayedItems(filteredBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
