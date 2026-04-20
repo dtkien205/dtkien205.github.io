@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect } from "react";
 import { toTitleCase } from "../helpers/toTitleCase";
 import { extractTitleAndExcerpt } from "../helpers/extractTitleAndExcerpt";
+import { extractCoverImageFromMarkdown } from "../helpers/extractCoverImageFromMarkdown";
 import { getRepoDisplayName } from "../helpers/getRepoDisplayName";
 import { getCachedData, setCachedData } from "../helpers/cacheUtils";
 import {
@@ -39,25 +40,39 @@ export function useFetchAllBlogs() {
     const dirPath = config.path ? `${config.path}/${d.name}` : d.name;
 
     try {
-      // Chỉ fetch README content (không fetch commit date để tiết kiệm API calls)
-      const readmeContent = await fetchReadmeContent({
-        owner: config.owner,
-        repo: config.repo,
-        branch: config.branch,
-        path: dirPath,
-      });
+      // Fetch README content và last commit date song song
+      const [readmeContent, lastModified] = await Promise.all([
+        fetchReadmeContent({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: dirPath,
+        }),
+        fetchLastCommitDate({
+          owner: config.owner,
+          repo: config.repo,
+          branch: config.branch,
+          path: dirPath,
+          headers: ghHeaders,
+        }),
+      ]);
 
       if (!readmeContent) return null;
 
       const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
+      const coverImageUrl = extractCoverImageFromMarkdown(
+        readmeContent,
+        `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${dirPath}/`
+      );
 
       return {
         id: d.name,
         title: toTitleCase(title),
         excerpt,
+        coverImageUrl,
         link: `${config.basePath || ""}/${d.name}`,
         repoDisplayName: getRepoDisplayName(config.repo),
-        lastModified: null, // Không fetch commit date để tiết kiệm API quota
+        lastModified,
       };
     } catch {
       return null;
