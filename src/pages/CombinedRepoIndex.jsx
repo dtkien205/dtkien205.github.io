@@ -6,6 +6,7 @@ import IntroPage from "../components/IntroPage";
 import SortFilter from "../components/SortFilter";
 import { toTitleCase } from "../helpers/toTitleCase";
 import { extractTitleAndExcerpt } from "../helpers/extractTitleAndExcerpt";
+import { extractCoverImageFromMarkdown } from "../helpers/extractCoverImageFromMarkdown";
 import { formatDate } from "../helpers/formatDate";
 import { sortBlogs } from "../helpers/sortBlogs";
 import { getCachedData, setCachedData } from "../helpers/cacheUtils";
@@ -63,11 +64,16 @@ export default function CombinedRepoIndex({ repos, basePath }) {
                 if (!readmeContent) return null;
 
                 const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
+                const coverImageUrl = extractCoverImageFromMarkdown(
+                    readmeContent,
+                    `https://raw.githubusercontent.com/${repoConfig.owner}/${repoConfig.repo}/${repoConfig.branch}/${dirPath}/`
+                );
 
                 return {
                     id: `${repoConfig.repo}/${d.name}`,
                     title: toTitleCase(title),
                     excerpt,
+                    coverImageUrl,
                     rawUrl: `https://raw.githubusercontent.com/${repoConfig.owner}/${repoConfig.repo}/${repoConfig.branch}/${dirPath}/README.md`,
                     githubUrl: d.html_url,
                     lastModified,
@@ -106,11 +112,16 @@ export default function CombinedRepoIndex({ repos, basePath }) {
                 if (!readmeContent) return null;
 
                 const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
+                const coverImageUrl = extractCoverImageFromMarkdown(
+                    readmeContent,
+                    `https://raw.githubusercontent.com/${repoConfig.owner}/${repoConfig.repo}/${repoConfig.branch}/${rootPath ? `${rootPath}/` : ""}`
+                );
 
                 return {
                     id: `${repoConfig.repo}__root`,
                     title: toTitleCase(title || repoConfig.displayName || repoConfig.repo),
                     excerpt,
+                    coverImageUrl,
                     rawUrl: `https://raw.githubusercontent.com/${repoConfig.owner}/${repoConfig.repo}/${repoConfig.branch}/${rootPath ? `${rootPath}/` : ""}README.md`,
                     githubUrl: `https://github.com/${repoConfig.owner}/${repoConfig.repo}`,
                     lastModified,
@@ -292,72 +303,81 @@ export default function CombinedRepoIndex({ repos, basePath }) {
                         <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
 
                         <div className="relative flex flex-col sm:flex-row">
-                            <div className="hidden sm:flex sm:w-48 sm:h-auto bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex-shrink-0 items-center justify-center">
-                                <svg
-                                    className="w-20 h-20 text-blue-600"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                >
-                                    <rect
-                                        x="4"
-                                        y="6"
-                                        width="12"
-                                        height="16"
-                                        rx="1"
-                                        strokeWidth="1.5"
-                                        className="text-blue-400"
+                            <div className="hidden sm:flex sm:w-48 sm:h-auto bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex-shrink-0 items-center justify-center overflow-hidden">
+                                {it.coverImageUrl ? (
+                                    <img
+                                        src={it.coverImageUrl}
+                                        alt={it.title}
+                                        className="h-full w-full object-cover"
+                                        loading="lazy"
                                     />
-                                    <rect
-                                        x="8"
-                                        y="2"
-                                        width="12"
-                                        height="16"
-                                        rx="1"
-                                        strokeWidth="2"
-                                        fill="currentColor"
-                                        className="text-blue-100"
-                                    />
-                                    <rect
-                                        x="8"
-                                        y="2"
-                                        width="12"
-                                        height="16"
-                                        rx="1"
-                                        strokeWidth="2"
+                                ) : (
+                                    <svg
+                                        className="w-20 h-20 text-blue-600"
+                                        viewBox="0 0 24 24"
                                         fill="none"
-                                    />
-                                    <path
-                                        d="M16 2v4h4"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    />
-                                    <line
-                                        x1="11"
-                                        y1="10"
-                                        x2="17"
-                                        y2="10"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                    />
-                                    <line
-                                        x1="11"
-                                        y1="13"
-                                        x2="17"
-                                        y2="13"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                    />
-                                    <line
-                                        x1="11"
-                                        y1="16"
-                                        x2="15"
-                                        y2="16"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                    />
-                                </svg>
+                                        stroke="currentColor"
+                                    >
+                                        <rect
+                                            x="4"
+                                            y="6"
+                                            width="12"
+                                            height="16"
+                                            rx="1"
+                                            strokeWidth="1.5"
+                                            className="text-blue-400"
+                                        />
+                                        <rect
+                                            x="8"
+                                            y="2"
+                                            width="12"
+                                            height="16"
+                                            rx="1"
+                                            strokeWidth="2"
+                                            fill="currentColor"
+                                            className="text-blue-100"
+                                        />
+                                        <rect
+                                            x="8"
+                                            y="2"
+                                            width="12"
+                                            height="16"
+                                            rx="1"
+                                            strokeWidth="2"
+                                            fill="none"
+                                        />
+                                        <path
+                                            d="M16 2v4h4"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        />
+                                        <line
+                                            x1="11"
+                                            y1="10"
+                                            x2="17"
+                                            y2="10"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                        />
+                                        <line
+                                            x1="11"
+                                            y1="13"
+                                            x2="17"
+                                            y2="13"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                        />
+                                        <line
+                                            x1="11"
+                                            y1="16"
+                                            x2="15"
+                                            y2="16"
+                                            strokeWidth="1.5"
+                                            strokeLinecap="round"
+                                        />
+                                    </svg>
+                                )}
                             </div>
 
                             <div className="flex-1 p-6 flex flex-col">

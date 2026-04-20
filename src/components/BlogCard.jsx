@@ -4,6 +4,8 @@ import ReactMarkdown from "react-markdown";
 
 // Memoize component để tránh re-render không cần thiết
 const BlogCard = React.memo(({ blog }) => {
+  const [imageError, setImageError] = React.useState(false);
+
   const displayDate = blog.lastModified
     ? new Date(blog.lastModified).toLocaleDateString("vi-VN", {
       year: "numeric",
@@ -14,6 +16,7 @@ const BlogCard = React.memo(({ blog }) => {
 
   // Kiểm tra xem có phải WriteUpCTF không
   const isWriteUpCTF = blog.repoDisplayName === "WriteUpCTF";
+  const coverImageUrl = blog.coverImageUrl && !imageError ? blog.coverImageUrl : "";
 
   return (
     <div className="group relative bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden h-full border border-gray-100 hover:border-blue-200">
@@ -23,6 +26,52 @@ const BlogCard = React.memo(({ blog }) => {
       <Link to={blog.link} className="relative h-full flex flex-col">
         {/* Top accent bar */}
         <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+
+        {coverImageUrl ? (
+          <div className="h-44 bg-gray-50 overflow-hidden border-b border-gray-100">
+            <img
+              src={coverImageUrl}
+              alt={blog.title || "Cover image"}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              onError={() => setImageError(true)}
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div className="hidden sm:flex sm:h-44 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 items-center justify-center border-b border-gray-100">
+            <svg
+              className="w-20 h-20 text-blue-600"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+            >
+              <rect
+                x="4"
+                y="6"
+                width="12"
+                height="16"
+                rx="1"
+                strokeWidth="1.5"
+                className="text-blue-400"
+              />
+              <rect
+                x="8"
+                y="2"
+                width="12"
+                height="16"
+                rx="1"
+                strokeWidth="2"
+                fill="currentColor"
+                className="text-blue-100"
+              />
+              <rect x="8" y="2" width="12" height="16" rx="1" strokeWidth="2" fill="none" />
+              <path d="M16 2v4h4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <line x1="11" y1="10" x2="17" y2="10" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="11" y1="13" x2="17" y2="13" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="11" y1="16" x2="15" y2="16" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+        )}
 
         <div className="p-5 flex-grow relative">
           {/* Category badge (optional - can extract from repo name) */}

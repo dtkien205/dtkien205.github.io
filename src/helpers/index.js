@@ -5,6 +5,7 @@
 
 export { getCachedData, setCachedData } from "./cacheUtils";
 export { extractTitleAndExcerpt } from "./extractTitleAndExcerpt";
+export { extractCoverImageFromMarkdown } from "./extractCoverImageFromMarkdown";
 export { formatDate } from "./formatDate";
 export { getRepoDisplayName } from "./getRepoDisplayName";
 export {
