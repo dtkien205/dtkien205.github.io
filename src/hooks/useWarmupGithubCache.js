@@ -12,7 +12,7 @@ import {
 } from "../helpers/githubApi";
 
 const CACHE_DURATION = 60 * 60 * 1000;
-const ALL_BLOGS_CACHE_KEY = "allBlogs_cache_v1";
+const ALL_BLOGS_CACHE_KEY = "allBlogs_cache_v2";
 
 let hasStartedWarmup = false;
 
@@ -27,7 +27,7 @@ function getRepoConfigs() {
 }
 
 function getRepoIndexCacheKey(config) {
-  return `repoIndex_${config.owner}_${config.repo}_${config.path}_v1`;
+  return `repoIndex_${config.owner}_${config.repo}_${config.path}_v2`;
 }
 
 function toHomeBlogItem(repoBlog, config) {
@@ -35,6 +35,7 @@ function toHomeBlogItem(repoBlog, config) {
     id: repoBlog.id,
     title: repoBlog.title,
     excerpt: repoBlog.excerpt,
+    coverImageUrl: repoBlog.coverImageUrl || "",
     link: `${config.basePath || ""}/${repoBlog.id}`,
     repoDisplayName: getRepoDisplayName(config.repo),
     lastModified: repoBlog.lastModified || null,
@@ -74,10 +75,16 @@ async function fetchRepoBlogs(config, ghHeaders) {
 
       const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
 
+      const coverImageUrl = extractCoverImageFromMarkdown(
+        readmeContent,
+        `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${dirPath}/`
+      );
+
       return {
         id: d.name,
         title: toTitleCase(title),
         excerpt,
+        coverImageUrl,
         rawUrl: `https://raw.githubusercontent.com/${config.owner}/${config.repo}/${config.branch}/${dirPath}/README.md`,
         githubUrl: d.html_url,
         lastModified,
