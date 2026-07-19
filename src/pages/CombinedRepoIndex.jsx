@@ -4,22 +4,15 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import IntroPage from "../components/IntroPage";
 import SortFilter from "../components/SortFilter";
-import { toTitleCase } from "../helpers/toTitleCase";
-import { extractTitleAndExcerpt } from "../helpers/extractTitleAndExcerpt";
-import { extractCoverImageFromMarkdown } from "../helpers/extractCoverImageFromMarkdown";
 import { formatDate } from "../helpers/formatDate";
 import { sortBlogs } from "../helpers/sortBlogs";
-import { getCachedData, setCachedData } from "../helpers/cacheUtils";
 import {
-    getGitHubHeaders,
-    fetchDirectories,
-    fetchReadmeContent,
-    fetchLastCommitDate,
-} from "../helpers/githubApi";
+    getBlogsForCombinedIndex,
+    loadAllBlogs,
+} from "../helpers/allBlogsCache";
 import PageLoader from "../components/PageLoader";
 
 const INITIAL_ITEMS_TO_SHOW = 6;
-const CACHE_DURATION = 60 * 60 * 1000;
 
 /**
  * Component hiển thị list items từ 2 repos khác nhau (Attack Lab + Cheat Sheet)
@@ -37,189 +30,24 @@ export default function CombinedRepoIndex({ repos, basePath }) {
     const introRepoKey = basePath === "/project" ? "Project" : "Other";
     const showProjectSourceButton = basePath === "/project";
 
-    // Fetch blog từ một directory
-    const fetchBlogFromDir = React.useCallback(
-        async (d, ghHeaders, repoConfig) => {
-            const dirPath = repoConfig.path
-                ? `${repoConfig.path}/${d.name}`
-                : d.name;
-
-            try {
-                const [readmeContent, lastModified] = await Promise.all([
-                    fetchReadmeContent({
-                        owner: repoConfig.owner,
-                        repo: repoConfig.repo,
-                        branch: repoConfig.branch,
-                        path: dirPath,
-                    }),
-                    fetchLastCommitDate({
-                        owner: repoConfig.owner,
-                        repo: repoConfig.repo,
-                        branch: repoConfig.branch,
-                        path: dirPath,
-                        headers: ghHeaders,
-                    }),
-                ]);
-
-                if (!readmeContent) return null;
-
-                const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
-                const coverImageUrl = extractCoverImageFromMarkdown(
-                    readmeContent,
-                    `https://raw.githubusercontent.com/${repoConfig.owner}/${repoConfig.repo}/${repoConfig.branch}/${dirPath}/`
-                );
-
-                return {
-                    id: `${repoConfig.repo}/${d.name}`,
-                    title: toTitleCase(title),
-                    excerpt,
-                    coverImageUrl,
-                    rawUrl: `https://raw.githubusercontent.com/${repoConfig.owner}/${repoConfig.repo}/${repoConfig.branch}/${dirPath}/README.md`,
-                    githubUrl: d.html_url,
-                    lastModified,
-                    repo: repoConfig.repo,
-                    repoDisplayName: repoConfig.displayName,
-                    detailPath: `${repoConfig.basePath}/${d.name}`,
-                };
-            } catch {
-                return null;
-            }
-        },
-        []
-    );
-
-    const fetchRepoRootReadme = React.useCallback(
-        async (ghHeaders, repoConfig) => {
-            const rootPath = repoConfig.path || "";
-
-            try {
-                const [readmeContent, lastModified] = await Promise.all([
-                    fetchReadmeContent({
-                        owner: repoConfig.owner,
-                        repo: repoConfig.repo,
-                        branch: repoConfig.branch,
-                        path: rootPath,
-                    }),
-                    fetchLastCommitDate({
-                        owner: repoConfig.owner,
-                        repo: repoConfig.repo,
-                        branch: repoConfig.branch,
-                        path: rootPath,
-                        headers: ghHeaders,
-                    }),
-                ]);
-
-                if (!readmeContent) return null;
-
-                const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
-                const coverImageUrl = extractCoverImageFromMarkdown(
-                    readmeContent,
-                    `https://raw.githubusercontent.com/${repoConfig.owner}/${repoConfig.repo}/${repoConfig.branch}/${rootPath ? `${rootPath}/` : ""}`
-                );
-
-                return {
-                    id: `${repoConfig.repo}__root`,
-                    title: toTitleCase(title || repoConfig.displayName || repoConfig.repo),
-                    excerpt,
-                    coverImageUrl,
-                    rawUrl: `https://raw.githubusercontent.com/${repoConfig.owner}/${repoConfig.repo}/${repoConfig.branch}/${rootPath ? `${rootPath}/` : ""}README.md`,
-                    githubUrl: `https://github.com/${repoConfig.owner}/${repoConfig.repo}`,
-                    lastModified,
-                    repo: repoConfig.repo,
-                    repoDisplayName: repoConfig.displayName,
-                    detailPath: repoConfig.detailPath || repoConfig.basePath,
-                };
-            } catch {
-                return null;
-            }
-        },
-        []
-    );
-
     // Load blogs từ tất cả repos
     React.useEffect(() => {
         let active = true;
 
         async function loadBlogs() {
-            const cacheKey = `combinedRepoIndex_${basePath}_${repos
-                .map((r) => `${r.owner}/${r.repo}/${r.mode || "dir"}/${r.path || ""}`)
-                .join("|")}_v2`;
-            const homeAllBlogsCacheKey = "allBlogs_cache_v2";
-
-            // Check cache repo-specific
-            let cachedData = getCachedData(cacheKey, CACHE_DURATION);
-            if (cachedData && active) {
-                setAllBlogs(cachedData);
-                setDisplayedItems(cachedData.slice(0, INITIAL_ITEMS_TO_SHOW));
-                setHasMore(cachedData.length > INITIAL_ITEMS_TO_SHOW);
-                setPage(1);
-                setInfiniteEnabled(false);
-                setLoading(false);
-                return;
-            }
-
-            // Check cache từ Home (reuse data từ useFetchAllBlogs)
-            const homeAllBlogs = getCachedData(homeAllBlogsCacheKey, CACHE_DURATION);
-            if (homeAllBlogs && basePath && active) {
-                // Lọc blogs thuộc basePath hiện tại (e.g. "/project" hoặc "/other")
-                const filteredBlogs = homeAllBlogs.filter((b) => b.link?.startsWith(basePath + "/"));
-
-                if (filteredBlogs.length > 0) {
-                    setAllBlogs(filteredBlogs);
-                    setDisplayedItems(filteredBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
-                    setHasMore(filteredBlogs.length > INITIAL_ITEMS_TO_SHOW);
-                    setPage(1);
-                    setInfiniteEnabled(false);
-                    setLoading(false);
-                    return;
-                }
-            }
-
             try {
                 setLoading(true);
                 setError("");
 
-                const ghHeaders = getGitHubHeaders();
-                const allResults = [];
-
-                // Fetch từ tất cả repos
-                for (const repoConfig of repos) {
-                    try {
-                        if (repoConfig.mode === "root-readme") {
-                            const rootItem = await fetchRepoRootReadme(ghHeaders, repoConfig);
-                            if (rootItem) allResults.push(rootItem);
-                            continue;
-                        }
-
-                        const dirs = await fetchDirectories({
-                            owner: repoConfig.owner,
-                            repo: repoConfig.repo,
-                            path: repoConfig.path,
-                            branch: repoConfig.branch,
-                            headers: ghHeaders,
-                        });
-
-                        const blogPromises = dirs.map((d) =>
-                            fetchBlogFromDir(d, ghHeaders, repoConfig)
-                        );
-                        const results = (await Promise.all(blogPromises)).filter(
-                            (r) => r !== null
-                        );
-                        allResults.push(...results);
-                    } catch (e) {
-                        console.error(`Error fetching from ${repoConfig.repo}:`, e);
-                    }
-                }
+                const allCachedBlogs = await loadAllBlogs();
+                const results = getBlogsForCombinedIndex(allCachedBlogs, repos);
 
                 if (active) {
-                    setAllBlogs(allResults);
-                    setDisplayedItems(allResults.slice(0, INITIAL_ITEMS_TO_SHOW));
-                    setHasMore(allResults.length > INITIAL_ITEMS_TO_SHOW);
+                    setAllBlogs(results);
+                    setDisplayedItems(results.slice(0, INITIAL_ITEMS_TO_SHOW));
+                    setHasMore(results.length > INITIAL_ITEMS_TO_SHOW);
                     setPage(1);
                     setInfiniteEnabled(false);
-
-                    // Save to cache
-                    setCachedData(cacheKey, allResults);
                 }
             } catch (e) {
                 if (active) setError(e.message || "Failed to load blogs");
@@ -232,7 +60,7 @@ export default function CombinedRepoIndex({ repos, basePath }) {
         return () => {
             active = false;
         };
-    }, [repos, basePath, fetchBlogFromDir, fetchRepoRootReadme]);
+    }, [repos, basePath]);
 
     // Sort blogs
     const sortedBlogs = React.useMemo(() => {

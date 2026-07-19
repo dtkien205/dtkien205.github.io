@@ -13,12 +13,12 @@ const markdownRoutes = {
     path: "",
     basePath: "/webvulns",
   },
-  webVulnsLabRepo: {
+  webLabRepo: {
     owner: "dtkien205",
-    repo: "WebVulnerabilitiesLab",
-    branch: "master",
+    repo: "PortSwigger-WriteUp",
+    branch: "main",
     path: "",
-    basePath: "/webvulnslab",
+    basePath: "/weblab",
   },
   attackLabRepo: {
     owner: "dtkien205",

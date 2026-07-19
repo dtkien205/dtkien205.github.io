@@ -77,24 +77,24 @@ export default function App() {
           />
 
           {/* ================================ */}
-          {/* WEB VULNERABILITIES LAB */}
+          {/* WEB LABS (PortSwigger Write-Ups) */}
           {/* ================================ */}
           <Route
-            path="/webvulnslab"
+            path="/weblab"
             element={
               <RepoIndex
-                owner={markdownRoutes.webVulnsLabRepo.owner}
-                repo={markdownRoutes.webVulnsLabRepo.repo}
-                branch={markdownRoutes.webVulnsLabRepo.branch}
-                path={markdownRoutes.webVulnsLabRepo.path}
-                basePath="/webvulnslab"
+                owner={markdownRoutes.webLabRepo.owner}
+                repo={markdownRoutes.webLabRepo.repo}
+                branch={markdownRoutes.webLabRepo.branch}
+                path={markdownRoutes.webLabRepo.path}
+                basePath="/weblab"
               />
             }
           />
           <Route
-            path="/webvulnslab/:slug"
+            path="/weblab/:slug"
             element={
-              <RepoReadmePage repoConfig={markdownRoutes.webVulnsLabRepo} />
+              <RepoReadmePage repoConfig={markdownRoutes.webLabRepo} />
             }
           />
 

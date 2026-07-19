@@ -33,7 +33,8 @@ export default function Home() {
   // OPTIMIZATION: Dùng useMemo thay vì useEffect để filter
   // ================================
   const filtered = useMemo(() => {
-    return groupByRepo(allBlogs, searchTerm);
+    const visibleBlogs = allBlogs.filter((b) => b.showOnHome !== false);
+    return groupByRepo(visibleBlogs, searchTerm);
   }, [allBlogs, searchTerm]);
 
   // ================================

@@ -8,7 +8,7 @@ export default function MainLayout() {
   const { pathname } = useLocation();
 
   const isMarkdownPage =
-    /^\/(ctf-writeups|webvulns|webvulnslab|attack-lab|cheat-sheet|license-plate-detection|log-anomaly-detection)\/[^/]+$/.test(
+    /^\/(ctf-writeups|webvulns|weblab|attack-lab|cheat-sheet|license-plate-detection|log-anomaly-detection)\/[^/]+$/.test(
       pathname
     ) ||
     pathname === "/license-plate-detection" ||

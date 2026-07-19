@@ -5,7 +5,7 @@ const navItems = [
   { label: "Home", href: "/" },
   { label: "CTF Writeups", href: "/ctf-writeups" },
   { label: "Web Vulnerabilities", href: "/webvulns" },
-  { label: "Web Lab", href: "/webvulnslab" },
+  { label: "Web Labs", href: "/weblab" },
   { label: "Project", href: "/project" },
   { label: "Other", href: "/other" },
 ];

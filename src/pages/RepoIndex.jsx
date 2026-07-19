@@ -4,25 +4,15 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import IntroPage from "../components/IntroPage";
 import SortFilter from "../components/SortFilter";
-import { toTitleCase } from "../helpers/toTitleCase";
-import { extractTitleAndExcerpt } from "../helpers/extractTitleAndExcerpt";
-import { extractCoverImageFromMarkdown } from "../helpers/extractCoverImageFromMarkdown";
 import { formatDate } from "../helpers/formatDate";
 import { sortBlogs } from "../helpers/sortBlogs";
-import { getCachedData, setCachedData } from "../helpers/cacheUtils";
-import {
-  getGitHubHeaders,
-  fetchDirectories,
-  fetchReadmeContent,
-  fetchLastCommitDate,
-} from "../helpers/githubApi";
+import { getBlogsForRepoIndex, loadAllBlogs } from "../helpers/allBlogsCache";
 import PageLoader from "../components/PageLoader";
 
 // ================================
 // CONSTANTS
 // ================================
 const INITIAL_ITEMS_TO_SHOW = 6;
-const CACHE_DURATION = 60 * 60 * 1000; // 1 giờ (tăng từ 10 phút để giảm API calls)
 
 /**
  * Component hiển thị danh sách blogs từ một GitHub repository
@@ -54,112 +44,24 @@ export default function RepoIndex({
   const [sortBy, setSortBy] = React.useState("date-desc");
 
   // ================================
-  // HELPER: Fetch một blog từ directory
-  // Tối ưu: Dùng useCallback để memoize function
-  // ================================
-  const fetchBlogFromDir = React.useCallback(async (d, ghHeaders) => {
-    const dirPath = path ? `${path}/${d.name}` : d.name;
-
-    try {
-      // Fetch README content và last commit date song song
-      const [readmeContent, lastModified] = await Promise.all([
-        fetchReadmeContent({
-          owner,
-          repo,
-          branch,
-          path: dirPath,
-        }),
-        fetchLastCommitDate({
-          owner,
-          repo,
-          branch,
-          path: dirPath,
-          headers: ghHeaders,
-        }),
-      ]);
-
-      if (!readmeContent) return null;
-
-      const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
-      const coverImageUrl = extractCoverImageFromMarkdown(
-        readmeContent,
-        `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/`
-      );
-
-      return {
-        id: d.name,
-        title: toTitleCase(title),
-        excerpt,
-        coverImageUrl,
-        rawUrl: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}/README.md`,
-        githubUrl: d.html_url,
-        lastModified,
-      };
-    } catch {
-      return null;
-    }
-  }, [owner, repo, branch, path]);
-
-  // ================================
   // EFFECT: Load danh sách blogs ban đầu
   // ================================
   React.useEffect(() => {
     let active = true;
 
     async function loadBlogs() {
-      const repoSpecificCacheKey = `repoIndex_${owner}_${repo}_${path}_v2`;
-      const homeAllBlogsCacheKey = "allBlogs_cache_v2";
-
-      // Bước 1: Kiểm tra cache repo-specific
-      let cachedData = getCachedData(repoSpecificCacheKey, CACHE_DURATION);
-      if (cachedData && active) {
-        setAllBlogs(cachedData);
-        setDisplayedItems(cachedData.slice(0, INITIAL_ITEMS_TO_SHOW));
-        setHasMore(cachedData.length > INITIAL_ITEMS_TO_SHOW);
-        setPage(1);
-        setInfiniteEnabled(false);
-        setLoading(false);
-        return;
-      }
-
-      // Bước 1b: Kiểm tra cache từ Home (reuse data từ useFetchAllBlogs)
-      const homeAllBlogs = getCachedData(homeAllBlogsCacheKey, CACHE_DURATION);
-      if (homeAllBlogs && basePath && active) {
-        // Filter blogs thuộc repo hiện tại (startsWith basePath)
-        const filteredBlogs = homeAllBlogs.filter((b) => b.link?.startsWith(basePath + "/"));
-
-        if (filteredBlogs.length > 0) {
-          setAllBlogs(filteredBlogs);
-          setDisplayedItems(filteredBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
-          setHasMore(filteredBlogs.length > INITIAL_ITEMS_TO_SHOW);
-          setPage(1);
-          setInfiniteEnabled(false);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Bước 2: Fetch từ GitHub (fallback nếu cache không có hoặc filter không được)
       try {
         setLoading(true);
         setError("");
 
-        const ghHeaders = getGitHubHeaders();
-
-        // Lấy danh sách directories
-        const dirs = await fetchDirectories({
+        const allCachedBlogs = await loadAllBlogs();
+        const results = getBlogsForRepoIndex(allCachedBlogs, {
           owner,
           repo,
-          path,
           branch,
-          headers: ghHeaders,
+          path,
+          basePath,
         });
-
-        // Fetch tất cả blogs song song
-        const blogPromises = dirs.map((d) => fetchBlogFromDir(d, ghHeaders));
-        const results = (await Promise.all(blogPromises)).filter(
-          (r) => r !== null
-        );
 
         if (active) {
           setAllBlogs(results);
@@ -167,9 +69,6 @@ export default function RepoIndex({
           setHasMore(results.length > INITIAL_ITEMS_TO_SHOW);
           setPage(1);
           setInfiniteEnabled(false);
-
-          // Bước 3: Lưu vào cache (cả repo-specific và merge vào Home cache)
-          setCachedData(repoSpecificCacheKey, results);
         }
       } catch (e) {
         if (active) setError(e.message || "Failed to load blogs");
@@ -182,7 +81,7 @@ export default function RepoIndex({
     return () => {
       active = false;
     };
-  }, [owner, repo, branch, path, basePath, fetchBlogFromDir]);
+  }, [owner, repo, branch, path, basePath]);
 
   // ================================
   // MEMO: Sắp xếp blogs

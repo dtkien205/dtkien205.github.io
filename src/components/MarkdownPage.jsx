@@ -37,7 +37,7 @@ export default function MarkdownPage({ sourceUrl }) {
       {!loading && !error && <TableOfContents content={content} />}
 
       <section
-        className="markdown-body w-full px-0 md:px-4 py-8"
+        className="w-full px-4 md:px-8 lg:px-10 py-8"
         style={{ background: "transparent" }}
       >
         {loading && <PageLoader text="Đang tải nội dung…" />}
@@ -54,17 +54,19 @@ export default function MarkdownPage({ sourceUrl }) {
         )}
 
         {!loading && !error && (
-          <div className="motion-safe:animate-fade-in-up w-full lg:w-auto lg:mx-10 bg-white rounded-none md:rounded-xl shadow-md p-4 md:p-8 border border-gray-100">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              rehypePlugins={[
-                rehypeSlug,
-                [rehypeAutolinkHeadings, { behavior: "append" }],
-              ]}
-              urlTransform={urlTransform}
-            >
-              {renderedContent}
-            </ReactMarkdown>
+          <div className="motion-safe:animate-fade-in-up w-full bg-white rounded-none md:rounded-xl shadow-md p-4 md:p-8 border border-gray-100">
+            <div className="markdown-body" style={{ background: "transparent", maxWidth: "none" }}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={[
+                  rehypeSlug,
+                  [rehypeAutolinkHeadings, { behavior: "append" }],
+                ]}
+                urlTransform={urlTransform}
+              >
+                {renderedContent}
+              </ReactMarkdown>
+            </div>
           </div>
         )}
       </section>

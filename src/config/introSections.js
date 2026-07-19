@@ -11,11 +11,11 @@ export const INTRO_SECTIONS = {
     description:
       "A consolidated overview and analysis of common web vulnerabilities such as XSS, SQL Injection, CSRF, and SSRF, with real-world examples.",
   },
-  WebVulnerabilitiesLab: {
+  "PortSwigger-WriteUp": {
     labelTag: "h4",
-    title: "Web Vulnerabilities Labs",
+    title: "Web Labs",
     description:
-      "Self-built labs for practicing web application offense and defense. Each lab includes build instructions, payloads, and a flag to practice with.",
+      "My write-ups for PortSwigger Web Security Academy labs, covering topics like XSS, SQLi, SSRF, CSRF, authentication bypasses, and more.",
   }, "Attack-Lab": {
     labelTag: "h4",
     title: "Attack Lab",
