@@ -122,6 +122,10 @@ body {
     color: #0f172a;
 }
 
+.markdown-body > h1:first-child {
+    padding-right: 100px;
+}
+
 .markdown-body a {
     text-decoration: underline;
 }

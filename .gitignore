@@ -26,3 +26,5 @@ pnpm-debug.log*
 
 # Optional files
 .DS_Store
+.vercel
+.env*

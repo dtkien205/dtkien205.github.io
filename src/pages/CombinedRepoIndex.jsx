@@ -11,6 +11,7 @@ import {
     loadAllBlogs,
 } from "../helpers/allBlogsCache";
 import PageLoader from "../components/PageLoader";
+import ViewCounter from "../components/ViewCounter";
 
 const INITIAL_ITEMS_TO_SHOW = 6;
 
@@ -148,6 +149,14 @@ export default function CombinedRepoIndex({ repos, basePath }) {
 
                         <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
 
+                        <div className="absolute top-6 right-6 z-10">
+                            <ViewCounter
+                                path={it.detailPath}
+                                increment={false}
+                                className="rounded-full bg-white/90 px-2.5 py-1 shadow-sm ring-1 ring-gray-100"
+                            />
+                        </div>
+
                         <div className="relative flex flex-col sm:flex-row">
                             <div className="hidden sm:flex sm:w-48 sm:h-auto bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex-shrink-0 items-center justify-center overflow-hidden">
                                 {it.coverImageUrl ? (
@@ -226,7 +235,7 @@ export default function CombinedRepoIndex({ repos, basePath }) {
                                 )}
                             </div>
 
-                            <div className="flex-1 p-6 flex flex-col">
+                            <div className="flex-1 p-6 sm:pr-28 flex flex-col">
                                 <div className="flex-grow">
                                     <div className="mb-3 flex gap-2">
                                         <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">

@@ -8,6 +8,7 @@ import { formatDate } from "../helpers/formatDate";
 import { sortBlogs } from "../helpers/sortBlogs";
 import { getBlogsForRepoIndex, loadAllBlogs } from "../helpers/allBlogsCache";
 import PageLoader from "../components/PageLoader";
+import ViewCounter from "../components/ViewCounter";
 
 // ================================
 // CONSTANTS
@@ -189,6 +190,14 @@ export default function RepoIndex({
             {/* Top accent bar */}
             <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
 
+            <div className="absolute top-6 right-6 z-10">
+              <ViewCounter
+                path={`${basePath}/${it.id}`}
+                increment={false}
+                className="rounded-full bg-white/90 px-2.5 py-1 shadow-sm ring-1 ring-gray-100"
+              />
+            </div>
+
             <div className="relative flex flex-col sm:flex-row">
               {/* Left: Cover image if available, otherwise default icon */}
               <div className="hidden sm:flex sm:w-48 sm:h-auto bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex-shrink-0 items-center justify-center overflow-hidden">
@@ -217,7 +226,7 @@ export default function RepoIndex({
               </div>
 
               {/* Right: Content */}
-              <div className="flex-1 p-6 flex flex-col">
+              <div className="flex-1 p-6 sm:pr-28 flex flex-col">
                 <div className="flex-grow">
                   {/* Category badge */}
                   <div className="mb-3">

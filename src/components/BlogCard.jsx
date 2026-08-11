@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
+import ViewCounter from "./ViewCounter";
 
 // Memoize component để tránh re-render không cần thiết
 const BlogCard = React.memo(({ blog }) => {
@@ -26,6 +27,14 @@ const BlogCard = React.memo(({ blog }) => {
       <Link to={blog.link} className="relative h-full flex flex-col">
         {/* Top accent bar */}
         <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+
+        <div className="absolute top-4 right-4 z-10">
+          <ViewCounter
+            path={blog.link}
+            increment={false}
+            className="rounded-full bg-white/90 px-2.5 py-1 shadow-sm ring-1 ring-gray-100"
+          />
+        </div>
 
         {coverImageUrl ? (
           <div className="h-44 bg-gray-50 overflow-hidden border-b border-gray-100">

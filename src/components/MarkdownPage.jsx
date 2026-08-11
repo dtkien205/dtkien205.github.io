@@ -9,6 +9,7 @@ import { useHighlightCode } from "../hooks/useHighlightCode";
 import { useScrollToHash } from "../hooks/useScrollToHash";
 import PageLoader from "../components/PageLoader";
 import TableOfContents from "../components/TableOfContents";
+import ViewCounter from "../components/ViewCounter";
 import { stripCoverImageFromMarkdown } from "../helpers/extractCoverImageFromMarkdown";
 
 export default function MarkdownPage({ sourceUrl }) {
@@ -55,7 +56,11 @@ export default function MarkdownPage({ sourceUrl }) {
 
         {!loading && !error && (
           <div className="motion-safe:animate-fade-in-up w-full bg-white rounded-none md:rounded-xl shadow-md p-4 md:p-8 border border-gray-100">
-            <div className="markdown-body" style={{ background: "transparent", maxWidth: "none" }}>
+            <div className="markdown-body relative" style={{ background: "transparent", maxWidth: "none" }}>
+              <div className="absolute top-0 right-2 z-10">
+                <ViewCounter />
+              </div>
+
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[
