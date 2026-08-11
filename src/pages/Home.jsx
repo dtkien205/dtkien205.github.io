@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 import GroupRow from "../components/GroupRow";
@@ -27,15 +27,62 @@ export default function Home() {
   // STATE
   // ================================
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewCounts, setViewCounts] = useState({});
   const { allBlogs, loading, error } = useFetchAllBlogs();
+
+  useEffect(() => {
+    const visibleBlogs = allBlogs.filter((blog) => blog.showOnHome !== false);
+    const paths = [...new Set(visibleBlogs.map((blog) => blog.link).filter(Boolean))];
+
+    if (paths.length === 0) {
+      setViewCounts({});
+      return;
+    }
+
+    let active = true;
+
+    async function loadViewCounts() {
+      try {
+        const response = await fetch("/api/views", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ paths }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load home view counts");
+        }
+
+        const data = await response.json();
+        if (active) {
+          setViewCounts(data.views || {});
+        }
+      } catch (error) {
+        console.error("Home view counter error:", error);
+      }
+    }
+
+    loadViewCounts();
+
+    return () => {
+      active = false;
+    };
+  }, [allBlogs]);
 
   // ================================
   // OPTIMIZATION: Dùng useMemo thay vì useEffect để filter
   // ================================
   const filtered = useMemo(() => {
-    const visibleBlogs = allBlogs.filter((b) => b.showOnHome !== false);
+    const visibleBlogs = allBlogs
+      .filter((b) => b.showOnHome !== false)
+      .map((blog) => ({
+        ...blog,
+        viewCount: Number(viewCounts[blog.link] || 0),
+      }));
     return groupByRepo(visibleBlogs, searchTerm);
-  }, [allBlogs, searchTerm]);
+  }, [allBlogs, searchTerm, viewCounts]);
 
   // ================================
   // RENDER: Loading state

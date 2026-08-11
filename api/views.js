@@ -2,6 +2,14 @@ import { Redis } from "@upstash/redis";
 
 const redis = Redis.fromEnv();
 
+function isValidPath(path) {
+  return (
+    typeof path === "string" &&
+    path.startsWith("/") &&
+    path.length <= 300
+  );
+}
+
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
@@ -12,13 +20,34 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (req.method === "POST" && Array.isArray(req.body?.paths)) {
+      const paths = [...new Set(req.body.paths)];
+
+      if (
+        paths.length === 0 ||
+        paths.length > 200 ||
+        paths.some((path) => !isValidPath(path))
+      ) {
+        return res.status(400).json({
+          error: "Invalid paths",
+        });
+      }
+
+      const values = await Promise.all(
+        paths.map((path) => redis.get(`views:${path}`))
+      );
+      const views = Object.fromEntries(
+        paths.map((path, index) => [path, Number(values[index] || 0)])
+      );
+
+      return res.status(200).json({
+        views,
+      });
+    }
+
     const path = req.method === "GET" ? req.query.path : req.body?.path;
 
-    if (
-      typeof path !== "string" ||
-      !path.startsWith("/") ||
-      path.length > 300
-    ) {
+    if (!isValidPath(path)) {
       return res.status(400).json({
         error: "Invalid path",
       });

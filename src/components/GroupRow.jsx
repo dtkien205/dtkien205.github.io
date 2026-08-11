@@ -14,12 +14,16 @@ export default function GroupRow({
   const sorted = useMemo(() => {
     const s = [...data.blogs];
     s.sort((a, b) => {
+      const va = Number(a.viewCount || 0);
+      const vb = Number(b.viewCount || 0);
+      if (vb !== va) return vb - va;
+
       const ta = a.lastModified ? Date.parse(a.lastModified) : 0;
       const tb = b.lastModified ? Date.parse(b.lastModified) : 0;
       return tb - ta;
     });
     return s;
-  }, [JSON.stringify(data.blogs.map(b => ({ id: b.id, lastModified: b.lastModified })))]);
+  }, [JSON.stringify(data.blogs.map(b => ({ id: b.id, lastModified: b.lastModified, viewCount: b.viewCount })))]);
 
 
   const visible = isSearching ? sorted : sorted.slice(0, MAX_SHOW);

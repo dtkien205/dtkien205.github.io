@@ -6,7 +6,9 @@ export function groupByRepo(blogs, searchTerm = "") {
   const q = (searchTerm || "").trim().toLowerCase();
 
   // Tạo cache key từ blogs length và search term
-  const cacheKey = `${blogs.length}_${q}`;
+  const cacheKey = `${q}_${blogs
+    .map((blog) => `${blog.link || blog.id}:${blog.viewCount || 0}`)
+    .join("|")}`;
 
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey);
