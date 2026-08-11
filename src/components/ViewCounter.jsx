@@ -38,7 +38,6 @@ export default function ViewCounter({
         setViews(Number(data.views || 0));
       } catch (error) {
         console.error("View counter error:", error);
-        setViews(0);
       }
     };
 
