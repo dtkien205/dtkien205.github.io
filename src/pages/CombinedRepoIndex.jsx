@@ -12,6 +12,7 @@ import {
 } from "../helpers/allBlogsCache";
 import PageLoader from "../components/PageLoader";
 import ViewCounter from "../components/ViewCounter";
+import { useViewCounts } from "../hooks/useViewCounts";
 
 const INITIAL_ITEMS_TO_SHOW = 6;
 
@@ -30,6 +31,19 @@ export default function CombinedRepoIndex({ repos, basePath }) {
     const [sortBy, setSortBy] = React.useState("date-desc");
     const introRepoKey = basePath === "/project" ? "Project" : "Other";
     const showProjectSourceButton = basePath === "/project";
+    const viewPaths = React.useMemo(
+        () => allBlogs.map((blog) => blog.detailPath),
+        [allBlogs]
+    );
+    const viewCounts = useViewCounts(viewPaths);
+    const blogsWithViews = React.useMemo(
+        () =>
+            allBlogs.map((blog) => ({
+                ...blog,
+                viewCount: Number(viewCounts[blog.detailPath] || 0),
+            })),
+        [allBlogs, viewCounts]
+    );
 
     // Load blogs từ tất cả repos
     React.useEffect(() => {
@@ -65,8 +79,8 @@ export default function CombinedRepoIndex({ repos, basePath }) {
 
     // Sort blogs
     const sortedBlogs = React.useMemo(() => {
-        return sortBlogs(allBlogs, sortBy);
-    }, [allBlogs, sortBy]);
+        return sortBlogs(blogsWithViews, sortBy);
+    }, [blogsWithViews, sortBy]);
 
     // Update displayed items when sorted blogs change
     React.useEffect(() => {

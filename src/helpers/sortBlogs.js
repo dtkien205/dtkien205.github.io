@@ -52,6 +52,28 @@ export function sortBlogs(blogs, sortBy) {
                 return dateB - dateA; // Mới nhất trước
             });
 
+        case "view-desc":
+            return sorted.sort((a, b) => {
+                const viewsA = Number(a.viewCount || 0);
+                const viewsB = Number(b.viewCount || 0);
+                if (viewsB !== viewsA) return viewsB - viewsA;
+
+                const dateA = a.lastModified ? Date.parse(a.lastModified) : 0;
+                const dateB = b.lastModified ? Date.parse(b.lastModified) : 0;
+                return dateB - dateA;
+            });
+
+        case "view-asc":
+            return sorted.sort((a, b) => {
+                const viewsA = Number(a.viewCount || 0);
+                const viewsB = Number(b.viewCount || 0);
+                if (viewsA !== viewsB) return viewsA - viewsB;
+
+                const dateA = a.lastModified ? Date.parse(a.lastModified) : 0;
+                const dateB = b.lastModified ? Date.parse(b.lastModified) : 0;
+                return dateB - dateA;
+            });
+
         default:
             return sorted;
     }

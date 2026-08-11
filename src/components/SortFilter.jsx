@@ -23,6 +23,8 @@ export default function SortFilter({ sortBy, setSortBy }) {
                 <option value="title-desc">Z-A</option>
                 <option value="date-desc">Newest</option>
                 <option value="date-asc">Oldest</option>
+                <option value="view-desc">Most views</option>
+                <option value="view-asc">Least views</option>
             </select>
         </div>
     );

@@ -9,6 +9,7 @@ import { sortBlogs } from "../helpers/sortBlogs";
 import { getBlogsForRepoIndex, loadAllBlogs } from "../helpers/allBlogsCache";
 import PageLoader from "../components/PageLoader";
 import ViewCounter from "../components/ViewCounter";
+import { useViewCounts } from "../hooks/useViewCounts";
 
 // ================================
 // CONSTANTS
@@ -43,6 +44,22 @@ export default function RepoIndex({
   const [loadingMore, setLoadingMore] = React.useState(false);
   const [infiniteEnabled, setInfiniteEnabled] = React.useState(false);
   const [sortBy, setSortBy] = React.useState("date-desc");
+  const viewPaths = React.useMemo(
+    () => allBlogs.map((blog) => `${basePath}/${blog.id}`),
+    [allBlogs, basePath]
+  );
+  const viewCounts = useViewCounts(viewPaths);
+  const blogsWithViews = React.useMemo(
+    () =>
+      allBlogs.map((blog) => {
+        const detailPath = `${basePath}/${blog.id}`;
+        return {
+          ...blog,
+          viewCount: Number(viewCounts[detailPath] || 0),
+        };
+      }),
+    [allBlogs, basePath, viewCounts]
+  );
 
   // ================================
   // EFFECT: Load danh sách blogs ban đầu
@@ -88,8 +105,8 @@ export default function RepoIndex({
   // MEMO: Sắp xếp blogs
   // ================================
   const sortedBlogs = React.useMemo(() => {
-    return sortBlogs(allBlogs, sortBy);
-  }, [allBlogs, sortBy]);
+    return sortBlogs(blogsWithViews, sortBy);
+  }, [blogsWithViews, sortBy]);
 
   // ================================
   // EFFECT: Cập nhật displayedItems khi sortedBlogs thay đổi
