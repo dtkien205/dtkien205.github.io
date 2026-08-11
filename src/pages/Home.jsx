@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 import GroupRow from "../components/GroupRow";
@@ -6,6 +6,7 @@ import { useFetchAllBlogs } from "../hooks/useFetchAllBlogs";
 import { groupByRepo } from "../helpers/groupByRepo";
 import IntroHome from "../components/IntroHome";
 import PageLoader from "../components/PageLoader";
+import { useViewCounts } from "../hooks/useViewCounts";
 
 const HOME_CATEGORY_LINKS = [
   {
@@ -27,49 +28,15 @@ export default function Home() {
   // STATE
   // ================================
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewCounts, setViewCounts] = useState({});
   const { allBlogs, loading, error } = useFetchAllBlogs();
-
-  useEffect(() => {
-    const visibleBlogs = allBlogs.filter((blog) => blog.showOnHome !== false);
-    const paths = [...new Set(visibleBlogs.map((blog) => blog.link).filter(Boolean))];
-
-    if (paths.length === 0) {
-      setViewCounts({});
-      return;
-    }
-
-    let active = true;
-
-    async function loadViewCounts() {
-      try {
-        const response = await fetch("/api/views", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ paths }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to load home view counts");
-        }
-
-        const data = await response.json();
-        if (active) {
-          setViewCounts(data.views || {});
-        }
-      } catch (error) {
-        console.error("Home view counter error:", error);
-      }
-    }
-
-    loadViewCounts();
-
-    return () => {
-      active = false;
-    };
-  }, [allBlogs]);
+  const homeViewPaths = useMemo(
+    () =>
+      allBlogs
+        .filter((blog) => blog.showOnHome !== false)
+        .map((blog) => blog.link),
+    [allBlogs]
+  );
+  const viewCounts = useViewCounts(homeViewPaths);
 
   // ================================
   // OPTIMIZATION: Dùng useMemo thay vì useEffect để filter
@@ -77,10 +44,16 @@ export default function Home() {
   const filtered = useMemo(() => {
     const visibleBlogs = allBlogs
       .filter((b) => b.showOnHome !== false)
-      .map((blog) => ({
-        ...blog,
-        viewCount: Number(viewCounts[blog.link] || 0),
-      }));
+      .map((blog) => {
+        const hasViewCount = Object.prototype.hasOwnProperty.call(
+          viewCounts,
+          blog.link
+        );
+        return {
+          ...blog,
+          viewCount: hasViewCount ? Number(viewCounts[blog.link] || 0) : undefined,
+        };
+      });
     return groupByRepo(visibleBlogs, searchTerm);
   }, [allBlogs, searchTerm, viewCounts]);
 

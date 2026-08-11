@@ -3,11 +3,26 @@ import React, { useEffect, useState } from "react";
 export default function ViewCounter({
   path,
   increment = true,
+  initialViews,
+  fetchOnMissing = true,
   className = "",
 }) {
-  const [views, setViews] = useState(null);
+  const hasInitialViews = initialViews !== undefined && initialViews !== null;
+  const [views, setViews] = useState(
+    hasInitialViews ? Number(initialViews) : null
+  );
 
   useEffect(() => {
+    if (!increment && hasInitialViews) {
+      setViews(Number(initialViews));
+      return;
+    }
+
+    if (!increment && !fetchOnMissing) {
+      setViews(null);
+      return;
+    }
+
     const loadViews = async () => {
       try {
         const targetPath = path || window.location.pathname;
@@ -42,7 +57,7 @@ export default function ViewCounter({
     };
 
     loadViews();
-  }, [path, increment]);
+  }, [path, increment, initialViews, hasInitialViews, fetchOnMissing]);
 
   return (
     <div

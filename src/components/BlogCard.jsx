@@ -32,6 +32,8 @@ const BlogCard = React.memo(({ blog }) => {
           <ViewCounter
             path={blog.link}
             increment={false}
+            initialViews={blog.viewCount}
+            fetchOnMissing={false}
             className="rounded-full bg-white/90 px-2.5 py-1 shadow-sm ring-1 ring-gray-100"
           />
         </div>

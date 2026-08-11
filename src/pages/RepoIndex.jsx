@@ -53,9 +53,13 @@ export default function RepoIndex({
     () =>
       allBlogs.map((blog) => {
         const detailPath = `${basePath}/${blog.id}`;
+        const hasViewCount = Object.prototype.hasOwnProperty.call(
+          viewCounts,
+          detailPath
+        );
         return {
           ...blog,
-          viewCount: Number(viewCounts[detailPath] || 0),
+          viewCount: hasViewCount ? Number(viewCounts[detailPath] || 0) : undefined,
         };
       }),
     [allBlogs, basePath, viewCounts]
@@ -211,6 +215,8 @@ export default function RepoIndex({
               <ViewCounter
                 path={`${basePath}/${it.id}`}
                 increment={false}
+                initialViews={it.viewCount}
+                fetchOnMissing={false}
                 className="rounded-full bg-white/90 px-2.5 py-1 shadow-sm ring-1 ring-gray-100"
               />
             </div>

@@ -38,10 +38,16 @@ export default function CombinedRepoIndex({ repos, basePath }) {
     const viewCounts = useViewCounts(viewPaths);
     const blogsWithViews = React.useMemo(
         () =>
-            allBlogs.map((blog) => ({
-                ...blog,
-                viewCount: Number(viewCounts[blog.detailPath] || 0),
-            })),
+            allBlogs.map((blog) => {
+                const hasViewCount = Object.prototype.hasOwnProperty.call(
+                    viewCounts,
+                    blog.detailPath
+                );
+                return {
+                    ...blog,
+                    viewCount: hasViewCount ? Number(viewCounts[blog.detailPath] || 0) : undefined,
+                };
+            }),
         [allBlogs, viewCounts]
     );
 
@@ -167,6 +173,8 @@ export default function CombinedRepoIndex({ repos, basePath }) {
                             <ViewCounter
                                 path={it.detailPath}
                                 increment={false}
+                                initialViews={it.viewCount}
+                                fetchOnMissing={false}
                                 className="rounded-full bg-white/90 px-2.5 py-1 shadow-sm ring-1 ring-gray-100"
                             />
                         </div>

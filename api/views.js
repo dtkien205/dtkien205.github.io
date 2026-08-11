@@ -33,9 +33,7 @@ export default async function handler(req, res) {
         });
       }
 
-      const values = await Promise.all(
-        paths.map((path) => redis.get(`views:${path}`))
-      );
+      const values = await redis.mget(...paths.map((path) => `views:${path}`));
       const views = Object.fromEntries(
         paths.map((path, index) => [path, Number(values[index] || 0)])
       );
