@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import IntroPage from "../components/IntroPage";
 import SortFilter from "../components/SortFilter";
+import SearchBar from "../components/SearchBar";
 import { formatDate } from "../helpers/formatDate";
 import { sortBlogs } from "../helpers/sortBlogs";
 import { getBlogsForRepoIndex, loadAllBlogs } from "../helpers/allBlogsCache";
@@ -44,6 +45,7 @@ export default function RepoIndex({
   const [loadingMore, setLoadingMore] = React.useState(false);
   const [infiniteEnabled, setInfiniteEnabled] = React.useState(false);
   const [sortBy, setSortBy] = React.useState("date-desc");
+  const [searchTerm, setSearchTerm] = React.useState("");
   const viewPaths = React.useMemo(
     () => allBlogs.map((blog) => `${basePath}/${blog.id}`),
     [allBlogs, basePath]
@@ -59,6 +61,7 @@ export default function RepoIndex({
         );
         return {
           ...blog,
+          detailPath,
           viewCount: hasViewCount ? Number(viewCounts[detailPath] || 0) : undefined,
         };
       }),
@@ -112,17 +115,26 @@ export default function RepoIndex({
     return sortBlogs(blogsWithViews, sortBy);
   }, [blogsWithViews, sortBy]);
 
+  // Filter theo searchTerm
+  const filteredBlogs = React.useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return sortedBlogs;
+    return sortedBlogs.filter(
+      (b) =>
+        (b.title || "").toLowerCase().includes(q) ||
+        (b.excerpt || "").toLowerCase().includes(q)
+    );
+  }, [sortedBlogs, searchTerm]);
+
   // ================================
   // EFFECT: Cập nhật displayedItems khi sortedBlogs thay đổi
   // ================================
   React.useEffect(() => {
-    if (sortedBlogs.length === 0) return;
-
-    setDisplayedItems(sortedBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
-    setHasMore(sortedBlogs.length > INITIAL_ITEMS_TO_SHOW);
+    setDisplayedItems(filteredBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
+    setHasMore(filteredBlogs.length > INITIAL_ITEMS_TO_SHOW);
     setPage(1);
     setInfiniteEnabled(false);
-  }, [sortedBlogs]);
+  }, [filteredBlogs]);
 
   // ================================
   // FUNCTION: Load thêm items
@@ -134,7 +146,7 @@ export default function RepoIndex({
 
     const startIndex = displayedItems.length;
     const endIndex = startIndex + INITIAL_ITEMS_TO_SHOW;
-    const newItems = sortedBlogs.slice(startIndex, endIndex);
+    const newItems = filteredBlogs.slice(startIndex, endIndex);
 
     if (newItems.length === 0) {
       setHasMore(false);
@@ -143,10 +155,10 @@ export default function RepoIndex({
     }
 
     setDisplayedItems((prev) => [...prev, ...newItems]);
-    setHasMore(endIndex < sortedBlogs.length);
+    setHasMore(endIndex < filteredBlogs.length);
     setPage((p) => p + 1);
     setLoadingMore(false);
-  }, [sortedBlogs, displayedItems.length, hasMore, loadingMore]);
+  }, [filteredBlogs, displayedItems.length, hasMore, loadingMore]);
 
   // ================================
   // EFFECT: Infinite scroll (chỉ khi enabled)
@@ -187,6 +199,9 @@ export default function RepoIndex({
   // Kiểm tra xem có phải WebVulnerabilitiesLab không (cần View Source button)
   const isWebLab = repo === "WebVulnerabilitiesLab";
 
+  const isSearching = !!searchTerm.trim();
+  const totalResults = isSearching ? filteredBlogs.length : null;
+
   return (
     <section className="container mx-auto px-4 py-8 motion-safe:animate-fade-in-up motion-reduce:animate-none">
       {/* Header section với gradient design giống Home */}
@@ -194,10 +209,21 @@ export default function RepoIndex({
         <IntroPage repo={repo} />
       </div>
 
-      {/* Sort filter */}
+      {/* Search + Sort */}
+      <SearchBar
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        totalResults={totalResults}
+        allBlogs={blogsWithViews}
+      />
       <SortFilter sortBy={sortBy} setSortBy={setSortBy} />
 
       {/* Blog list với horizontal card design */}
+      {displayedItems.length === 0 && isSearching ? (
+        <p className="text-gray-600 text-center py-12">
+          Không tìm thấy bài viết nào phù hợp với &ldquo;{searchTerm}&rdquo;.
+        </p>
+      ) : (
       <div className="space-y-6">
         {displayedItems.map((it, idx) => (
           <article
@@ -321,9 +347,10 @@ export default function RepoIndex({
           </article>
         ))}
       </div>
+      )}
 
       {/* Load more button */}
-      {hasMore && !loading && (
+      {hasMore && !loading && !isSearching && (
         <div
           className="flex justify-center mt-8 motion-safe:animate-fade-in-up motion-reduce:animate-none"
           style={{ animationDelay: `${displayedItems.length * 60}ms` }}

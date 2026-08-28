@@ -4,6 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import IntroPage from "../components/IntroPage";
 import SortFilter from "../components/SortFilter";
+import SearchBar from "../components/SearchBar";
 import { formatDate } from "../helpers/formatDate";
 import { sortBlogs } from "../helpers/sortBlogs";
 import {
@@ -29,8 +30,11 @@ export default function CombinedRepoIndex({ repos, basePath }) {
     const [loadingMore, setLoadingMore] = React.useState(false);
     const [infiniteEnabled, setInfiniteEnabled] = React.useState(false);
     const [sortBy, setSortBy] = React.useState("date-desc");
+    const [searchTerm, setSearchTerm] = React.useState("");
+
     const introRepoKey = basePath === "/project" ? "Project" : "Other";
     const showProjectSourceButton = basePath === "/project";
+
     const viewPaths = React.useMemo(
         () => allBlogs.map((blog) => blog.detailPath),
         [allBlogs]
@@ -88,15 +92,24 @@ export default function CombinedRepoIndex({ repos, basePath }) {
         return sortBlogs(blogsWithViews, sortBy);
     }, [blogsWithViews, sortBy]);
 
-    // Update displayed items when sorted blogs change
-    React.useEffect(() => {
-        if (sortedBlogs.length === 0) return;
+    // Filter theo searchTerm
+    const filteredBlogs = React.useMemo(() => {
+        const q = searchTerm.trim().toLowerCase();
+        if (!q) return sortedBlogs;
+        return sortedBlogs.filter(
+            (b) =>
+                (b.title || "").toLowerCase().includes(q) ||
+                (b.excerpt || "").toLowerCase().includes(q)
+        );
+    }, [sortedBlogs, searchTerm]);
 
-        setDisplayedItems(sortedBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
-        setHasMore(sortedBlogs.length > INITIAL_ITEMS_TO_SHOW);
+    // Update displayed items when filteredBlogs change
+    React.useEffect(() => {
+        setDisplayedItems(filteredBlogs.slice(0, INITIAL_ITEMS_TO_SHOW));
+        setHasMore(filteredBlogs.length > INITIAL_ITEMS_TO_SHOW);
         setPage(1);
         setInfiniteEnabled(false);
-    }, [sortedBlogs]);
+    }, [filteredBlogs]);
 
     // Load more items
     const loadMoreItems = React.useCallback(() => {
@@ -106,7 +119,7 @@ export default function CombinedRepoIndex({ repos, basePath }) {
 
         const startIndex = displayedItems.length;
         const endIndex = startIndex + INITIAL_ITEMS_TO_SHOW;
-        const newItems = sortedBlogs.slice(startIndex, endIndex);
+        const newItems = filteredBlogs.slice(startIndex, endIndex);
 
         if (newItems.length === 0) {
             setHasMore(false);
@@ -115,10 +128,10 @@ export default function CombinedRepoIndex({ repos, basePath }) {
         }
 
         setDisplayedItems((prev) => [...prev, ...newItems]);
-        setHasMore(endIndex < sortedBlogs.length);
+        setHasMore(endIndex < filteredBlogs.length);
         setPage((p) => p + 1);
         setLoadingMore(false);
-    }, [sortedBlogs, displayedItems.length, hasMore, loadingMore]);
+    }, [filteredBlogs, displayedItems.length, hasMore, loadingMore]);
 
     // Infinite scroll
     React.useEffect(() => {
@@ -147,6 +160,9 @@ export default function CombinedRepoIndex({ repos, basePath }) {
     if (error)
         return <p className="text-red-600">Failed to load data: {error}</p>;
 
+    const isSearching = !!searchTerm.trim();
+    const totalResults = isSearching ? filteredBlogs.length : null;
+
     return (
         <section className="container mx-auto px-4 py-8 motion-safe:animate-fade-in-up motion-reduce:animate-none">
             {/* Header section */}
@@ -154,173 +170,185 @@ export default function CombinedRepoIndex({ repos, basePath }) {
                 <IntroPage repo={introRepoKey} />
             </div>
 
-            {/* Sort filter */}
+            {/* Search + Sort */}
+            <SearchBar
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                totalResults={totalResults}
+                allBlogs={blogsWithViews}
+            />
             <SortFilter sortBy={sortBy} setSortBy={setSortBy} />
 
             {/* Blog list */}
-            <div className="space-y-6">
-                {displayedItems.map((it, idx) => (
-                    <article
-                        key={it.id}
-                        className="group relative bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 motion-safe:animate-fade-in-up motion-reduce:animate-none"
-                        style={{ animationDelay: `${idx * 50}ms` }}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 via-purple-50/0 to-pink-50/0 group-hover:from-blue-50/50 group-hover:via-purple-50/30 group-hover:to-pink-50/20 transition-all duration-300 pointer-events-none" />
+            {displayedItems.length === 0 && isSearching ? (
+                <p className="text-gray-600 text-center py-12">
+                    Không tìm thấy bài viết nào phù hợp với &ldquo;{searchTerm}&rdquo;.
+                </p>
+            ) : (
+                <div className="space-y-6">
+                    {displayedItems.map((it, idx) => (
+                        <article
+                            key={it.id}
+                            className="group relative bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 motion-safe:animate-fade-in-up motion-reduce:animate-none"
+                            style={{ animationDelay: `${idx * 50}ms` }}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 via-purple-50/0 to-pink-50/0 group-hover:from-blue-50/50 group-hover:via-purple-50/30 group-hover:to-pink-50/20 transition-all duration-300 pointer-events-none" />
 
-                        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                            <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
 
-                        <div className="absolute top-6 right-6 z-10">
-                            <ViewCounter
-                                path={it.detailPath}
-                                increment={false}
-                                initialViews={it.viewCount}
-                                fetchOnMissing={false}
-                                className="rounded-full bg-white/90 px-2.5 py-1 shadow-sm ring-1 ring-gray-100"
-                            />
-                        </div>
-
-                        <div className="relative flex flex-col sm:flex-row">
-                            <div className="hidden sm:flex sm:w-48 sm:h-auto bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex-shrink-0 items-center justify-center overflow-hidden">
-                                {it.coverImageUrl ? (
-                                    <img
-                                        src={it.coverImageUrl}
-                                        alt={it.title}
-                                        className="h-full w-full object-cover"
-                                        loading="lazy"
-                                    />
-                                ) : (
-                                    <svg
-                                        className="w-20 h-20 text-blue-600"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                    >
-                                        <rect
-                                            x="4"
-                                            y="6"
-                                            width="12"
-                                            height="16"
-                                            rx="1"
-                                            strokeWidth="1.5"
-                                            className="text-blue-400"
-                                        />
-                                        <rect
-                                            x="8"
-                                            y="2"
-                                            width="12"
-                                            height="16"
-                                            rx="1"
-                                            strokeWidth="2"
-                                            fill="currentColor"
-                                            className="text-blue-100"
-                                        />
-                                        <rect
-                                            x="8"
-                                            y="2"
-                                            width="12"
-                                            height="16"
-                                            rx="1"
-                                            strokeWidth="2"
-                                            fill="none"
-                                        />
-                                        <path
-                                            d="M16 2v4h4"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                        <line
-                                            x1="11"
-                                            y1="10"
-                                            x2="17"
-                                            y2="10"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                        />
-                                        <line
-                                            x1="11"
-                                            y1="13"
-                                            x2="17"
-                                            y2="13"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                        />
-                                        <line
-                                            x1="11"
-                                            y1="16"
-                                            x2="15"
-                                            y2="16"
-                                            strokeWidth="1.5"
-                                            strokeLinecap="round"
-                                        />
-                                    </svg>
-                                )}
+                            <div className="absolute top-6 right-6 z-10">
+                                <ViewCounter
+                                    path={it.detailPath}
+                                    increment={false}
+                                    initialViews={it.viewCount}
+                                    fetchOnMissing={false}
+                                    className="rounded-full bg-white/90 px-2.5 py-1 shadow-sm ring-1 ring-gray-100"
+                                />
                             </div>
 
-                            <div className="flex-1 p-6 sm:pr-28 flex flex-col">
-                                <div className="flex-grow">
-                                    <div className="mb-3 flex gap-2">
-                                        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                                            {basePath === "/project"
-                                                ? "Project"
-                                                : it.repoDisplayName}
-                                        </span>
-                                    </div>
-
-                                    <Link to={it.detailPath}>
-                                        <h2 className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 mb-3">
-                                            {it.title}
-                                        </h2>
-                                    </Link>
-
-                                    {it.excerpt && (
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkGfm]}
-                                            className="text-gray-600 leading-relaxed line-clamp-2 mb-4"
+                            <div className="relative flex flex-col sm:flex-row">
+                                <div className="hidden sm:flex sm:w-48 sm:h-auto bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex-shrink-0 items-center justify-center overflow-hidden">
+                                    {it.coverImageUrl ? (
+                                        <img
+                                            src={it.coverImageUrl}
+                                            alt={it.title}
+                                            className="h-full w-full object-cover"
+                                            loading="lazy"
+                                        />
+                                    ) : (
+                                        <svg
+                                            className="w-20 h-20 text-blue-600"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
                                         >
-                                            {it.excerpt}
-                                        </ReactMarkdown>
+                                            <rect
+                                                x="4"
+                                                y="6"
+                                                width="12"
+                                                height="16"
+                                                rx="1"
+                                                strokeWidth="1.5"
+                                                className="text-blue-400"
+                                            />
+                                            <rect
+                                                x="8"
+                                                y="2"
+                                                width="12"
+                                                height="16"
+                                                rx="1"
+                                                strokeWidth="2"
+                                                fill="currentColor"
+                                                className="text-blue-100"
+                                            />
+                                            <rect
+                                                x="8"
+                                                y="2"
+                                                width="12"
+                                                height="16"
+                                                rx="1"
+                                                strokeWidth="2"
+                                                fill="none"
+                                            />
+                                            <path
+                                                d="M16 2v4h4"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                            <line
+                                                x1="11"
+                                                y1="10"
+                                                x2="17"
+                                                y2="10"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                            />
+                                            <line
+                                                x1="11"
+                                                y1="13"
+                                                x2="17"
+                                                y2="13"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                            />
+                                            <line
+                                                x1="11"
+                                                y1="16"
+                                                x2="15"
+                                                y2="16"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                            />
+                                        </svg>
                                     )}
                                 </div>
 
-                                <div className="flex items-center justify-between gap-3 text-sm text-gray-500">
-                                    <span>{formatDate(it.lastModified)}</span>
+                                <div className="flex-1 p-6 sm:pr-28 flex flex-col">
+                                    <div className="flex-grow">
+                                        <div className="mb-3 flex gap-2">
+                                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                                                {basePath === "/project"
+                                                    ? "Project"
+                                                    : it.repoDisplayName}
+                                            </span>
+                                        </div>
 
-                                    <div className="flex items-center gap-2">
-                                        {showProjectSourceButton && it.githubUrl && (
-                                            <a
-                                                href={it.githubUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-                                                </svg>
-                                                View Source
-                                            </a>
-                                        )}
-
-                                        <Link
-                                            to={it.detailPath}
-                                            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg transition-all shadow-md hover:shadow-lg"
-                                        >
-                                            <span>Read more</span>
-                                            <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                                            </svg>
+                                        <Link to={it.detailPath}>
+                                            <h2 className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-200 mb-3">
+                                                {it.title}
+                                            </h2>
                                         </Link>
+
+                                        {it.excerpt && (
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkGfm]}
+                                                className="text-gray-600 leading-relaxed line-clamp-2 mb-4"
+                                            >
+                                                {it.excerpt}
+                                            </ReactMarkdown>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-3 text-sm text-gray-500">
+                                        <span>{formatDate(it.lastModified)}</span>
+
+                                        <div className="flex items-center gap-2">
+                                            {showProjectSourceButton && it.githubUrl && (
+                                                <a
+                                                    href={it.githubUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                                                    </svg>
+                                                    View Source
+                                                </a>
+                                            )}
+
+                                            <Link
+                                                to={it.detailPath}
+                                                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 rounded-lg transition-all shadow-md hover:shadow-lg"
+                                            >
+                                                <span>Read more</span>
+                                                <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            </Link>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </article>
-                ))}
-            </div>
+                        </article>
+                    ))}
+                </div>
+            )}
 
             {/* Load more button */}
-            {hasMore && (
+            {hasMore && !isSearching && (
                 <div className="flex justify-center mt-12">
                     <button
                         onClick={handleLoadMoreClick}
