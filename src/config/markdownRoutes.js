@@ -48,6 +48,17 @@ const markdownRoutes = {
     path: "",
     basePath: "/log-anomaly-detection",
   },
+  sqliLeadToRceRepo: {
+    owner: "dtkien205",
+    repo: "SQliLeadToRCE",
+    branch: "main",
+    path: "",
+    basePath: "/sqli-lead-to-rce",
+    title: "SQliLeadToRCE",
+    excerpt: "BlueMarket CMS là nền tảng nội dung và thương mại điện tử mô phỏng, dùng PHP, PostgreSQL, SQLite và Docker.",
+    stopBeforeHeading: "## Bốn hướng được nhúng vào một website",
+    lastKnownCommitDate: "2026-11-16T15:30:25Z",
+  },
 };
 
 export default markdownRoutes;

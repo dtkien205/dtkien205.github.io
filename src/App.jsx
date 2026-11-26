@@ -99,7 +99,7 @@ export default function App() {
           />
 
           {/* ================================ */}
-          {/* PROJECT (License Plate Detection + Log Anomaly Detection) */}
+          {/* PROJECT */}
           {/* ================================ */}
           <Route
             path="/project"
@@ -124,6 +124,10 @@ export default function App() {
                     displayName: "Log Anomaly Detection",
                     basePath: "/log-anomaly-detection",
                     detailPath: "/log-anomaly-detection",
+                    mode: "root-readme",
+                  },
+                  {
+                    ...markdownRoutes.sqliLeadToRceRepo,
                     mode: "root-readme",
                   },
                 ]}
@@ -220,6 +224,14 @@ export default function App() {
                   ...markdownRoutes.logAnomalyDetectionRepo,
                   rootReadme: true,
                 }}
+              />
+            }
+          />
+          <Route
+            path={markdownRoutes.sqliLeadToRceRepo.basePath}
+            element={
+              <RepoReadmePage
+                repoConfig={{ ...markdownRoutes.sqliLeadToRceRepo, rootReadme: true }}
               />
             }
           />

@@ -12,8 +12,21 @@ import TableOfContents from "../components/TableOfContents";
 import ViewCounter from "../components/ViewCounter";
 import { stripCoverImageFromMarkdown } from "../helpers/extractCoverImageFromMarkdown";
 
-export default function MarkdownPage({ sourceUrl }) {
-  const { content, error, loading } = useMarkdownFetch(sourceUrl);
+export default function MarkdownPage({ sourceUrl, stopBeforeHeading }) {
+  const { content: readme, error: fetchError, loading } = useMarkdownFetch(sourceUrl);
+
+  const content = React.useMemo(() => {
+    if (!stopBeforeHeading) return readme;
+
+    const lines = readme.split(/\r?\n/);
+    const end = lines.findIndex((line) => line.trim() === stopBeforeHeading);
+    return end > 0 ? lines.slice(0, end).join("\n").trim() : "";
+  }, [readme, stopBeforeHeading]);
+  const error =
+    fetchError ||
+    (!loading && stopBeforeHeading && !content
+      ? "The README introduction could not be located."
+      : "");
 
   // base URL cho ảnh/link tương đối
   const baseOf = React.useMemo(() => {

@@ -17,5 +17,11 @@ export default function RepoReadmePage({ repoConfig }) {
   // Base để resolve ảnh/asset tương đối trong README
   const assetBase = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${dirPath}`;
 
-  return <MarkdownPage sourceUrl={sourceUrl} assetBase={assetBase} />;
+  return (
+    <MarkdownPage
+      sourceUrl={sourceUrl}
+      assetBase={assetBase}
+      stopBeforeHeading={repoConfig.stopBeforeHeading}
+    />
+  );
 }

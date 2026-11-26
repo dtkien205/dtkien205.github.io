@@ -14,7 +14,7 @@ import {
 export const ALL_BLOGS_CACHE_KEY = "allBlogs_cache_v2";
 export const ALL_BLOGS_CACHE_DURATION = 60 * 60 * 1000;
 
-const CACHE_SCHEMA_VERSION = 6;
+const CACHE_SCHEMA_VERSION = 8;
 
 let allBlogsMemory = null;
 let allBlogsRequest = null;
@@ -38,6 +38,10 @@ const rootReadmeRepoConfigs = [
     ...markdownRoutes.logAnomalyDetectionRepo,
     displayName: "Log Anomaly Detection",
     detailPath: "/log-anomaly-detection",
+    mode: "root-readme",
+  },
+  {
+    ...markdownRoutes.sqliLeadToRceRepo,
     mode: "root-readme",
   },
 ];
@@ -177,12 +181,14 @@ async function fetchRootReadmeRepo(config, ghHeaders) {
 
   try {
     const [readmeContent, lastModified] = await Promise.all([
-      fetchReadmeContent({
-        owner: config.owner,
-        repo: config.repo,
-        branch: config.branch,
-        path: repoPath,
-      }),
+      config.excerpt
+        ? null
+        : fetchReadmeContent({
+            owner: config.owner,
+            repo: config.repo,
+            branch: config.branch,
+            path: repoPath,
+          }),
       fetchLastCommitDate({
         owner: config.owner,
         repo: config.repo,
@@ -192,14 +198,15 @@ async function fetchRootReadmeRepo(config, ghHeaders) {
       }),
     ]);
 
-    if (!readmeContent) return [];
+    if (!readmeContent && !config.excerpt) return [];
 
-    const { title, excerpt } = extractTitleAndExcerpt(readmeContent);
+    const { title, excerpt } = config.excerpt
+      ? config
+      : extractTitleAndExcerpt(readmeContent);
     const detailPath = config.detailPath || config.basePath || "";
-    const coverImageUrl = extractCoverImageFromMarkdown(
-      readmeContent,
-      getRawBaseUrl(config, repoPath)
-    );
+    const coverImageUrl = readmeContent
+      ? extractCoverImageFromMarkdown(readmeContent, getRawBaseUrl(config, repoPath))
+      : "";
 
     return [
       {
@@ -208,7 +215,7 @@ async function fetchRootReadmeRepo(config, ghHeaders) {
         showOnHome: false,
         id: `${config.repo}__root`,
         slug: "",
-        title: toTitleCase(title || getDisplayName(config)),
+        title: config.title || toTitleCase(title || getDisplayName(config)),
         excerpt,
         coverImageUrl,
         link: detailPath,
@@ -222,7 +229,7 @@ async function fetchRootReadmeRepo(config, ghHeaders) {
         itemPath: repoPath,
         basePath: config.basePath || detailPath,
         repoDisplayName: getDisplayName(config),
-        lastModified,
+        lastModified: lastModified || config.lastKnownCommitDate || "",
       },
     ];
   } catch {
@@ -336,7 +343,7 @@ export function getBlogsForCombinedIndex(allBlogs, repos) {
           blog.mode === "root-readme"
             ? `${blog.repo}__root`
             : `${blog.repo}/${slug}`,
-        title: blog.title,
+        title: repoConfig.title || blog.title,
         excerpt: blog.excerpt,
         coverImageUrl: blog.coverImageUrl || "",
         rawUrl: blog.rawUrl,
